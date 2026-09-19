@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jogo da Memória</title>
+
+<style>
+  /* ===========================================================
+     CSS — a aparência do jogo.
+     Mude as cores aqui embaixo e elas mudam no jogo inteiro.
+     =========================================================== */
+  :root {
+    --fundo: #17313B;
+    --carta-verso: #2F5D62;
+    --carta-frente: #F1E3C8;
+    --destaque: #F2B705;
+    --texto: #EAF2F0;
+    --acerto: #7FB069;
+    --acerto-cpu: #C46A5B;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  /* Cada "tela" do jogo. A classe .oculta some com ela. */
+  .tela {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+  .oculta { display: none; }
+
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2.6rem;
+    font-weight: 400;
+    margin: 0;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin: 0;
+  }
+
+  .subtitulo {
+    margin: -12px 0 0;
+    font-size: 0.95rem;
+    opacity: 0.75;
+  }
+
+  /* Botões do menu */
+  .opcoes {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 260px;
+  }
+
+  .opcao {
+    padding: 14px;
+    font-size: 1.05rem;
+    font-family: inherit;
+    color: var(--texto);
+    background: var(--carta-verso);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .opcao:hover { border-color: var(--destaque); transform: translateY(-2px); }
+  .opcao:focus-visible { outline: 3px solid var(--destaque); outline-offset: 3px; }
+
+  .opcao small {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+
+  .link-voltar {
+    background: none;
+    border: none;
+    color: var(--texto);
+    opacity: 0.7;
+    font-family: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  /* Placar */
+  .placar {
+    display: flex;
+    gap: 28px;
+    font-size: 1rem;
+  }
+  .placar p { margin: 0; }
+  .placar span { color: var(--destaque); font-weight: 600; }
+
+  .vez {
+    min-height: 26px;
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--destaque);
+  }
+
+  /* Tabuleiro: grade de 4 colunas */
+  .tabuleiro {
+    display: grid;
+    grid-template-columns: repeat(4, 84px);
+    gap: 12px;
+  }
+
+  .carta {
+    height: 84px;
+    border: none;
+    border-radius: 10px;
+    background: var(--carta-verso);
+    color: transparent;      /* símbolo invisível enquanto virada pra baixo */
+    font-size: 2rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .carta:hover { transform: translateY(-3px); }
+  .carta:focus-visible { outline: 3px solid var(--destaque); outline-offset: 3px; }
+
+  .carta.virada {
+    background: var(--carta-frente);
+    color: #17313B;
+    cursor: default;
+  }
+  .carta.encontrada {
+    background: var(--acerto);
+    color: #17313B;
+    cursor: default;
+  }
+  .carta.encontrada-cpu { background: var(--acerto-cpu); }
+
+  @media (max-width: 420px) {
+    .tabuleiro { grid-template-columns: repeat(4, 68px); }
+    .carta { height: 68px; font-size: 1.6rem; }
+  }
+</style>
+</head>
+
+<body>
+
+  <!-- ===================== TELA 1: MENU ===================== -->
+  <div class="tela" id="tela-menu">
+    <h1>Jogo da Memória</h1>
+    <p class="subtitulo">Encontre os 8 pares</p>
+    <div class="opcoes">
+      <button class="opcao" id="botao-solo">Jogar solo</button>
+      <button class="opcao" id="botao-cpu">Contra a máquina</button>
+    </div>
+  </div>
+
+  <!-- ================ TELA 2: ESCOLHA DO NÍVEL ================ -->
+  <div class="tela oculta" id="tela-nivel">
+    <h2>Escolha o nível</h2>
+    <div class="opcoes">
+      <button class="opcao" data-nivel="facil">
+        Fácil <small>A máquina esquece quase tudo</small>
+      </button>
+      <button class="opcao" data-nivel="media">
+        Média <small>Lembra das últimas cartas que viu</small>
+      </button>
+      <button class="opcao" data-nivel="dificil">
+        Difícil <small>Nunca esquece uma carta</small>
+      </button>
+    </div>
+    <button class="link-voltar" id="voltar-menu">Voltar</button>
+  </div>
+
+  <!-- ===================== TELA 3: JOGO ===================== -->
+  <div class="tela oculta" id="tela-jogo">
+    <h2 id="titulo-jogo">Jogo da Memória</h2>
+    <div class="placar" id="placar"></div>
+    <p class="vez" id="vez"></p>
+    <div class="tabuleiro" id="tabuleiro"></div>
+    <button class="link-voltar" id="sair-jogo">Voltar ao menu</button>
+  </div>
+
+<script>
+/* ===============================================================
+   JAVASCRIPT — a lógica do jogo.
+   Leia de cima pra baixo: cada bloco numerado faz uma coisa só.
+   =============================================================== */
+
+// 1) Os símbolos. Cada um aparece duas vezes, formando 8 pares.
+const simbolos = ["🍋", "🌵", "🐙", "🎸", "🚀", "🧊", "🍕", "🦊"];
+
+/* 2) Configuração de cada nível. É AQUI que mora a "inteligência"
+      da máquina, e é o melhor lugar pra você experimentar:
+
+      chanceDeMemorizar → probabilidade (0 a 1) de ela anotar uma
+                          carta que acabou de ser virada.
+      limiteDeMemoria   → quantas cartas ela consegue lembrar ao
+                          mesmo tempo. Passou disso, esquece a mais
+                          antiga (igual a gente).
+      pausa             → tempo que ela "pensa" entre uma carta e
+                          outra, em milissegundos.                   */
+const niveis = {
+  facil:   { nome: "Fácil",   chanceDeMemorizar: 0.25, limiteDeMemoria: 2,  pausa: 900 },
+  media:   { nome: "Média",   chanceDeMemorizar: 0.65, limiteDeMemoria: 6,  pausa: 750 },
+  dificil: { nome: "Difícil", chanceDeMemorizar: 1.00, limiteDeMemoria: 16, pausa: 600 }
+};
+
+// 3) Estado do jogo — o que muda enquanto a partida acontece.
+let modo = "solo";          // "solo" ou "cpu"
+let nivel = niveis.facil;
+let cartas = [];            // todos os botões do tabuleiro
+let cartasViradas = [];     // as abertas agora (no máximo 2)
+let travado = false;        // bloqueia cliques em momentos errados
+let jogadas = 0;
+let paresEncontrados = 0;
+let pontos = { voce: 0, cpu: 0 };
+let vezDaCpu = false;
+
+// Memória da máquina: posição da carta → símbolo. E a ordem em que anotou.
+let memoria = {};
+let ordemDaMemoria = [];
+
+// 4) Atalhos para os elementos do HTML.
+const telaMenu = document.getElementById("tela-menu");
+const telaNivel = document.getElementById("tela-nivel");
+const telaJogo = document.getElementById("tela-jogo");
+const tabuleiro = document.getElementById("tabuleiro");
+const placar = document.getElementById("placar");
+const aviso = document.getElementById("vez");
+const tituloJogo = document.getElementById("titulo-jogo");
+
+// 5) Troca de tela: esconde todas e mostra só a escolhida.
+function mostrarTela(tela) {
+  [telaMenu, telaNivel, telaJogo].forEach(function (t) {
+    t.classList.add("oculta");
+  });
+  tela.classList.remove("oculta");
+}
+
+// 6) Embaralha uma lista: sorteia uma posição e troca com a atual.
+function embaralhar(lista) {
+  for (let i = lista.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+  }
+  return lista;
+}
+
+// 7) Monta uma partida nova.
+function iniciarJogo() {
+  cartas = [];
+  cartasViradas = [];
+  travado = false;
+  jogadas = 0;
+  paresEncontrados = 0;
+  pontos = { voce: 0, cpu: 0 };
+  vezDaCpu = false;
+  memoria = {};
+  ordemDaMemoria = [];
+  tabuleiro.innerHTML = "";
+
+  tituloJogo.textContent = modo === "solo"
+    ? "Jogo da Memória"
+    : "Contra a máquina · " + nivel.nome;
+
+  // Duplica os símbolos (para formar pares) e embaralha.
+  const baralho = embaralhar([...simbolos, ...simbolos]);
+
+  // Cria um botão para cada símbolo.
+  baralho.forEach(function (simbolo, posicao) {
+    const carta = document.createElement("button");
+    carta.className = "carta";
+    carta.textContent = simbolo;
+    carta.dataset.simbolo = simbolo;
+    carta.dataset.posicao = posicao;
+    carta.addEventListener("click", function () {
+      cliqueDoJogador(carta);
+    });
+    tabuleiro.appendChild(carta);
+    cartas.push(carta);
+  });
+
+  atualizarPlacar();
+  mostrarTela(telaJogo);
+}
+
+// 8) Atualiza o texto do placar e de quem é a vez.
+function atualizarPlacar() {
+  if (modo === "solo") {
+    placar.innerHTML = "<p>Jogadas: <span>" + jogadas + "</span></p>" +
+                       "<p>Pares: <span>" + paresEncontrados + "</span> de 8</p>";
+  } else {
+    placar.innerHTML = "<p>Você: <span>" + pontos.voce + "</span></p>" +
+                       "<p>Máquina: <span>" + pontos.cpu + "</span></p>";
+    aviso.textContent = vezDaCpu ? "Vez da máquina..." : "Sua vez";
+  }
+}
+
+// 9) Clique do jogador numa carta.
+function cliqueDoJogador(carta) {
+  if (travado || vezDaCpu) return;
+  abrirCarta(carta);
+}
+
+// 10) Abre uma carta (serve para o jogador e para a máquina).
+function abrirCarta(carta) {
+  if (!carta) return;
+  if (carta.classList.contains("virada")) return;
+  if (carta.classList.contains("encontrada")) return;
+
+  carta.classList.add("virada");
+  cartasViradas.push(carta);
+  memorizar(carta);   // a máquina observa tudo que é virado
+
+  if (cartasViradas.length === 2) {
+    jogadas++;
+    verificarPar();
+  }
+}
+
+/* 11) A máquina tenta anotar a carta que acabou de aparecer.
+       No fácil ela quase nunca anota; no difícil, sempre.        */
+function memorizar(carta) {
+  if (modo !== "cpu") return;
+  if (Math.random() > nivel.chanceDeMemorizar) return;
+
+  const posicao = carta.dataset.posicao;
+  if (memoria[posicao]) return;   // já estava anotada
+
+  memoria[posicao] = carta.dataset.simbolo;
+  ordemDaMemoria.push(posicao);
+
+  // Passou do limite? Esquece a anotação mais antiga.
+  if (ordemDaMemoria.length > nivel.limiteDeMemoria) {
+    const maisAntiga = ordemDaMemoria.shift();
+    delete memoria[maisAntiga];
+  }
+}
+
+// 12) Tira uma carta da memória (quando o par já foi encontrado).
+function esquecer(carta) {
+  const posicao = carta.dataset.posicao;
+  delete memoria[posicao];
+  ordemDaMemoria = ordemDaMemoria.filter(function (p) { return p !== posicao; });
+}
+
+// 13) Compara as duas cartas abertas.
+function verificarPar() {
+  travado = true;
+  const primeira = cartasViradas[0];
+  const segunda = cartasViradas[1];
+  const acertou = primeira.dataset.simbolo === segunda.dataset.simbolo;
+
+  setTimeout(function () {
+    if (acertou) {
+      [primeira, segunda].forEach(function (c) {
+        c.classList.add("encontrada");
+        if (vezDaCpu) c.classList.add("encontrada-cpu");
+        esquecer(c);
+      });
+      paresEncontrados++;
+      if (modo === "cpu") {
+        pontos[vezDaCpu ? "cpu" : "voce"]++;
+      }
+    } else {
+      primeira.classList.remove("virada");
+      segunda.classList.remove("virada");
+    }
+
+    cartasViradas = [];
+    travado = false;
+
+    // Fim de jogo?
+    if (paresEncontrados === simbolos.length) {
+      atualizarPlacar();
+      mostrarResultado();
+      return;
+    }
+
+    if (modo === "cpu") {
+      // Quem acerta joga de novo. Quem erra passa a vez.
+      if (!acertou) vezDaCpu = !vezDaCpu;
+      atualizarPlacar();
+      if (vezDaCpu) setTimeout(turnoDaCpu, 600);
+    } else {
+      atualizarPlacar();
+      aviso.textContent = "";
+    }
+  }, acertou ? 450 : 900);
+}
+
+// 14) Mostra quem ganhou.
+function mostrarResultado() {
+  if (modo === "solo") {
+    aviso.textContent = "Você venceu em " + jogadas + " jogadas!";
+  } else if (pontos.voce > pontos.cpu) {
+    aviso.textContent = "Você venceu! " + pontos.voce + " a " + pontos.cpu;
+  } else if (pontos.cpu > pontos.voce) {
+    aviso.textContent = "A máquina venceu. " + pontos.cpu + " a " + pontos.voce;
+  } else {
+    aviso.textContent = "Empate, 4 a 4.";
+  }
+}
+
+// 15) Lista das cartas que ainda estão fechadas.
+function cartasDisponiveis() {
+  return cartas.filter(function (c) {
+    return !c.classList.contains("encontrada") && !c.classList.contains("virada");
+  });
+}
+
+// 16) Sorteia uma carta fechada, preferindo as que ela NÃO conhece.
+function sortearCarta() {
+  const livres = cartasDisponiveis();
+  if (livres.length === 0) return null;
+  const desconhecidas = livres.filter(function (c) {
+    return !memoria[c.dataset.posicao];
+  });
+  const opcoes = desconhecidas.length > 0 ? desconhecidas : livres;
+  return opcoes[Math.floor(Math.random() * opcoes.length)];
+}
+
+// 17) Procura na memória duas posições com o mesmo símbolo.
+function procurarParNaMemoria() {
+  const posicoes = Object.keys(memoria);
+  for (let i = 0; i < posicoes.length; i++) {
+    for (let j = i + 1; j < posicoes.length; j++) {
+      if (memoria[posicoes[i]] === memoria[posicoes[j]]) {
+        const a = cartas[posicoes[i]];
+        const b = cartas[posicoes[j]];
+        if (!a.classList.contains("encontrada") && !b.classList.contains("encontrada")) {
+          return [a, b];
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// 18) Procura na memória o par de um símbolo específico.
+function procurarNaMemoria(simbolo, exceto) {
+  const posicao = Object.keys(memoria).find(function (p) {
+    return memoria[p] === simbolo && p !== exceto.dataset.posicao;
+  });
+  return posicao ? cartas[posicao] : null;
+}
+
+// 19) A jogada da máquina.
+function turnoDaCpu() {
+  const parConhecido = procurarParNaMemoria();
+
+  if (parConhecido) {
+    // Ela lembra dos dois. Vira direto.
+    abrirCarta(parConhecido[0]);
+    setTimeout(function () { abrirCarta(parConhecido[1]); }, nivel.pausa);
+    return;
+  }
+
+  // Não lembra de nenhum par: chuta a primeira.
+  const primeira = sortearCarta();
+  abrirCarta(primeira);
+
+  setTimeout(function () {
+    // Agora que viu a primeira, tenta lembrar onde está a irmã dela.
+    const irma = procurarNaMemoria(primeira.dataset.simbolo, primeira);
+    const escolhida = (irma && !irma.classList.contains("virada")) ? irma : sortearCarta();
+    abrirCarta(escolhida);
+  }, nivel.pausa);
+}
+
+// 20) Ligações dos botões das telas.
+document.getElementById("botao-solo").addEventListener("click", function () {
+  modo = "solo";
+  iniciarJogo();
+});
+
+document.getElementById("botao-cpu").addEventListener("click", function () {
+  modo = "cpu";
+  mostrarTela(telaNivel);
+});
+
+document.querySelectorAll("[data-nivel]").forEach(function (botao) {
+  botao.addEventListener("click", function () {
+    nivel = niveis[botao.dataset.nivel];
+    iniciarJogo();
+  });
+});
+
+document.getElementById("voltar-menu").addEventListener("click", function () {
+  mostrarTela(telaMenu);
+});
+
+document.getElementById("sair-jogo").addEventListener("click", function () {
+  mostrarTela(telaMenu);
+});
+</script>
+
+</body>
+</html>
