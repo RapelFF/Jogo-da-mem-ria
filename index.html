@@ -7,10 +7,10 @@
 
 <style>
   /* ===========================================================
-     CSS — a aparência e as animações do jogo.
+     CSS — aparência e animações.
      As variáveis de cor (--fundo, --painel, --glow, --verso-a,
-     --verso-b, --frente) são trocadas pelo JavaScript quando você
-     escolhe uma skin: a interface inteira muda de clima junto.
+     --verso-b, --frente) são trocadas pelo JavaScript conforme a
+     skin equipada: a interface inteira muda de clima junto.
      =========================================================== */
   :root {
     --fundo: #17313B;
@@ -29,6 +29,8 @@
 
   * { box-sizing: border-box; }
 
+  html { -webkit-tap-highlight-color: transparent; }
+
   body {
     margin: 0;
     min-height: 100vh;
@@ -43,7 +45,10 @@
     transition: background-color 0.6s ease;
   }
 
-  /* Duas "manchas" de luz que derivam devagar atrás de tudo */
+  /* Evita o zoom por toque duplo e o atraso de 300ms nos botões */
+  button { touch-action: manipulation; font-family: inherit; }
+
+  /* Manchas de luz derivando atrás de tudo */
   body::before {
     content: "";
     position: fixed;
@@ -61,7 +66,7 @@
     to   { transform: translate(4%, -3%) scale(1.15); }
   }
 
-  /* Símbolos do jogo flutuando de baixo pra cima, bem de leve */
+  /* Símbolos flutuando no fundo */
   .fundo-flutuante {
     position: fixed;
     inset: 0;
@@ -80,13 +85,11 @@
     to   { transform: translateY(-125vh) rotate(360deg); }
   }
 
-  /* Canvas das partículas e do confete: fica por cima de tudo e não atrapalha cliques */
-  #fx {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    pointer-events: none;
-  }
+  /* Modo leve: ligado sozinho em aparelhos mais modestos (poucos núcleos/pouca memória) */
+  .leve body::before { animation: none; }
+  .leve .fundo-flutuante { display: none; }
+
+  #fx { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
 
   .tela {
     position: relative;
@@ -95,9 +98,11 @@
     flex-direction: column;
     align-items: center;
     gap: 18px;
+    width: 100%;
+    max-width: 560px;
   }
   .tela:not(.oculta) { animation: entrar 0.4s ease-out; }
-  .oculta { display: none; }
+  .oculta { display: none !important; }
 
   @keyframes entrar {
     from { opacity: 0; transform: translateY(14px) scale(0.98); }
@@ -121,7 +126,6 @@
     letter-spacing: 1px;
     text-align: center;
   }
-  /* Cada letra do título é um <span> que cai com um atraso diferente */
   h1 span {
     display: inline-block;
     animation: letra 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.4) backwards;
@@ -134,13 +138,15 @@
     to   { opacity: 1; transform: none; }
   }
 
-  h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; font-weight: 400; margin: 0; }
-  h3 { font-family: Georgia, "Times New Roman", serif; font-size: 1.5rem; font-weight: 400; margin: 0; }
+  h2, h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; margin: 0; }
+  h2 { font-size: 1.5rem; text-align: center; }
+  h3 { font-size: 1.25rem; }
+  h4 { margin: 6px 0 0; font-size: 0.95rem; font-weight: 600; opacity: 0.85; align-self: flex-start; }
   p { margin: 0; }
 
-  .subtitulo { margin-top: -8px; font-size: 0.95rem; opacity: 0.75; }
+  .subtitulo { margin-top: -8px; font-size: 0.95rem; opacity: 0.75; text-align: center; }
 
-  /* Pílulas de informação (moedas, tempo, placar...) */
+  /* Pílulas de informação */
   .chip {
     display: flex;
     align-items: center;
@@ -166,31 +172,30 @@
     100% { transform: rotateY(360deg); }
   }
 
-  /* Botão de som, fixo no canto da tela */
   .som {
     position: fixed;
-    top: 12px;
-    right: 12px;
+    top: 10px;
+    right: 10px;
     z-index: 25;
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     font-size: 1.1rem;
     border: none;
     border-radius: 50%;
     background: var(--painel);
+    color: var(--texto);
     cursor: pointer;
-    transition: transform 0.2s;
   }
-  .som:hover { transform: scale(1.12); }
   .som:focus-visible { outline: 3px solid var(--destaque); outline-offset: 2px; }
 
-  /* Botões grandes dos menus: entram um por um */
-  .opcoes { display: flex; flex-direction: column; gap: 12px; width: 280px; }
+  /* Botões grandes dos menus (altura mínima de 56px: fáceis de tocar) */
+  .opcoes { display: flex; flex-direction: column; gap: 12px; width: min(300px, 100%); }
 
   .opcao {
+    position: relative;
+    min-height: 56px;
     padding: 14px;
     font-size: 1.05rem;
-    font-family: inherit;
     color: var(--texto);
     background: var(--painel);
     border: 2px solid transparent;
@@ -202,86 +207,162 @@
     animation: subir-suave 0.45s ease-out backwards;
     animation-delay: calc(var(--i, 0) * 80ms + 150ms);
   }
-  .opcao:hover { border-color: var(--destaque); transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 22px rgba(0,0,0,0.3); }
   .opcao:active { transform: scale(0.98); }
   .opcao:focus-visible { outline: 3px solid var(--destaque); outline-offset: 3px; }
   .opcao small { display: block; margin-top: 4px; font-size: 0.8rem; opacity: 0.7; }
 
+  .aviso-badge {
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 7px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 24px;
+    color: var(--fundo);
+    background: var(--destaque);
+    border-radius: 999px;
+    animation: pop 0.4s ease-out;
+  }
+  .aviso-badge:empty { display: none; }
+
   .botao {
+    min-height: 48px;
     padding: 12px 26px;
     font-size: 1rem;
-    font-family: inherit;
     color: var(--fundo);
     background: var(--destaque);
     border: 2px solid var(--destaque);
     border-radius: 999px;
     cursor: pointer;
-    transition: transform 0.15s;
+    transition: transform 0.15s, opacity 0.2s;
   }
-  .botao:hover { transform: translateY(-2px); }
   .botao:active { transform: scale(0.96); }
+  .botao:disabled { opacity: 0.45; cursor: default; }
   .botao.secundario { color: var(--texto); background: transparent; border-color: rgba(255,255,255,0.25); }
   .botao:focus-visible { outline: 3px solid var(--texto); outline-offset: 3px; }
 
   .link-voltar {
+    min-height: 44px;
+    padding: 10px 16px;
     background: none;
     border: none;
     color: var(--texto);
-    opacity: 0.7;
-    font-family: inherit;
-    font-size: 0.9rem;
+    opacity: 0.75;
+    font-size: 0.95rem;
     cursor: pointer;
     text-decoration: underline;
   }
-  .link-voltar:hover { opacity: 1; }
 
-  /* ---------- Loja de skins ---------- */
+  /* Só aplica o "hover" em aparelhos com mouse (no celular ele ficaria preso depois do toque) */
+  @media (hover: hover) {
+    .som:hover { transform: scale(1.12); }
+    .opcao:hover { border-color: var(--destaque); transform: translateY(-3px) scale(1.02); box-shadow: 0 8px 22px rgba(0,0,0,0.3); }
+    .botao:hover:not(:disabled) { transform: translateY(-2px); }
+    .link-voltar:hover { opacity: 1; }
+    .skin:hover { transform: translateY(-4px); }
+    .carta:not(.virada):not(.encontrada):hover .carta-interna { transform: translateY(-4px) rotate(-3deg); }
+  }
+
+  /* ---------- Loja ---------- */
   .lista-skins {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 480px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+    gap: 12px;
+    width: 100%;
   }
   .skin {
+    --rar: #9DB4B0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    width: 104px;
-    padding: 12px 8px;
-    font-family: inherit;
+    gap: 5px;
+    padding: 12px 6px;
     color: var(--texto);
     background: var(--painel);
     border: 2px solid transparent;
+    border-top: 4px solid var(--rar);
     border-radius: 14px;
     cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-    animation: subir-suave 0.4s ease-out backwards;
-    animation-delay: calc(var(--i, 0) * 70ms);
+    transition: transform 0.2s, outline-color 0.2s;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
   }
-  .skin:hover { transform: translateY(-4px) scale(1.04); }
-  .skin.selecionada { border-color: var(--destaque); animation: subir-suave 0.4s ease-out backwards, pulsar 2s ease-in-out 0.5s infinite; animation-delay: calc(var(--i, 0) * 70ms), 0s; }
-  .skin:focus-visible { outline: 3px solid var(--destaque); outline-offset: 3px; }
-  @keyframes pulsar {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(242, 183, 5, 0.5); }
-    50%      { box-shadow: 0 0 0 8px rgba(242, 183, 5, 0); }
-  }
+  .skin.anim { animation: subir-suave 0.4s ease-out backwards; animation-delay: calc(var(--i, 0) * 60ms); }
+  .skin.foco { outline-color: var(--destaque); }
+  .skin:focus-visible { outline: 3px solid var(--destaque); }
   .skin .amostra {
-    width: 52px;
-    height: 52px;
+    width: 50px;
+    height: 50px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
-    color: rgba(255,255,255,0.4);
+    font-size: 1.3rem;
+    color: rgba(255,255,255,0.45);
     box-shadow: inset 0 0 0 3px rgba(255,255,255,0.12);
   }
   .skin .nome { font-size: 0.85rem; }
-  .skin .custo { font-size: 0.75rem; opacity: 0.75; }
-  .skin.bloqueada .amostra { filter: grayscale(0.6); opacity: 0.7; }
+  .skin .raridade { font-size: 0.7rem; font-weight: 700; color: var(--rar); }
+  .skin .estado { font-size: 0.72rem; opacity: 0.85; }
+  .skin.equipada .estado { color: var(--acerto); opacity: 1; font-weight: 700; }
+  .skin.sem-moedas { opacity: 0.6; }
+  .skin[data-raridade="lendaria"] { animation: brilho-lendario 2.4s ease-in-out infinite; }
+  .skin[data-raridade="epica"] { box-shadow: 0 0 14px -4px var(--rar); }
+  @keyframes brilho-lendario {
+    0%, 100% { box-shadow: 0 0 6px -2px var(--rar); }
+    50%      { box-shadow: 0 0 18px 0 var(--rar); }
+  }
+
+  .detalhe-skin {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--painel);
+    border-radius: 16px;
+  }
+  .detalhe-skin .previa { display: flex; gap: 8px; }
+  .detalhe-skin .mini {
+    width: 52px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 3px rgba(255,255,255,0.12);
+  }
+  .detalhe-skin .info { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; flex: 1; }
+  .detalhe-skin .info p { font-size: 0.85rem; opacity: 0.85; }
   .mensagem-loja { min-height: 22px; font-size: 0.95rem; color: var(--destaque); text-align: center; }
+
+  /* ---------- Desafios ---------- */
+  .lista-desafios { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .desafio {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--painel);
+    border-radius: 14px;
+  }
+  .desafio .texto { font-size: 0.95rem; }
+  .desafio .barra-mini {
+    grid-column: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .desafio .barra-mini i { display: block; height: 100%; background: linear-gradient(90deg, var(--acerto), var(--destaque)); border-radius: inherit; }
+  .desafio .num { grid-column: 1; font-size: 0.75rem; opacity: 0.7; }
+  .desafio .botao { grid-column: 2; grid-row: 1 / span 3; min-height: 44px; padding: 8px 16px; font-size: 0.9rem; }
+  .desafio.feito { opacity: 0.6; }
 
   /* ---------- Tela do jogo ---------- */
   .linha-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 10px; }
@@ -318,23 +399,32 @@
     50%      { transform: scale(1.05); }
   }
 
+  /* O tabuleiro calcula sozinho o tamanho da carta: nunca passa de 84px
+     e diminui se a tela for estreita (cabe em qualquer celular).
+     Tabuleiro grande vira 4 colunas em telas pequenas, com cartas maiores. */
   .tabuleiro {
+    --cols: 4;
+    --gap: 12px;
+    --tam: min(84px, calc((100vw - 32px - (var(--cols) - 1) * var(--gap)) / var(--cols)));
     display: grid;
-    grid-template-columns: repeat(4, 84px);
-    gap: 12px;
+    grid-template-columns: repeat(var(--cols), var(--tam));
+    gap: var(--gap);
+    justify-content: center;
+  }
+  .tabuleiro.grande { --cols: 6; }
+  @media (max-width: 520px) {
+    .tabuleiro { --gap: 10px; }
+    .tabuleiro.grande { --cols: 4; }
+    h1 { font-size: 2.2rem; }
   }
   .tabuleiro.bloqueado .carta { cursor: progress; }
 
   /* ---------- A carta, com animação de virar em 3D ----------
-     .carta cria a perspectiva. .carta-interna gira em volta do
-     eixo vertical. .verso e .frente ficam costas com costas e
-     backface-visibility esconde o lado virado pra longe.
-
      Animações "de momento" (cair, pular, tremer, festa) usam classes
      que o JavaScript coloca e tira — assim nunca repetem sozinhas. */
   .carta {
-    width: 84px;
-    height: 84px;
+    width: var(--tam);
+    height: var(--tam);
     padding: 0;
     border: none;
     background: none;
@@ -351,7 +441,6 @@
     transform-style: preserve-3d;
     transition: transform 0.45s ease;
   }
-  .carta:not(.virada):not(.encontrada):hover .carta-interna { transform: translateY(-4px) rotate(-3deg); }
   .carta.virada .carta-interna,
   .carta.encontrada .carta-interna { transform: rotateY(180deg); }
   .carta.virada, .carta.encontrada { cursor: default; }
@@ -369,13 +458,13 @@
   .verso {
     background: linear-gradient(135deg, var(--verso-a), var(--verso-b));
     color: rgba(255,255,255,0.35);
-    font-size: 1.5rem;
+    font-size: calc(var(--tam) * 0.3);
     box-shadow: inset 0 0 0 3px rgba(255,255,255,0.12), 0 4px 10px rgba(0,0,0,0.25);
   }
   .frente {
     background: var(--frente);
     color: var(--tinta);
-    font-size: 2rem;
+    font-size: calc(var(--tam) * 0.42);
     transform: rotateY(180deg);
   }
   .carta.encontrada .frente { background: var(--acerto); }
@@ -389,14 +478,12 @@
     from { opacity: 0; transform: translateY(-50px) scale(0.6) rotate(-14deg); }
     to   { opacity: 1; transform: none; }
   }
-
   .carta.pulo { animation: pulo 0.55s ease-out; }
   @keyframes pulo {
     0%   { transform: scale(1); }
     40%  { transform: scale(1.2); }
     100% { transform: scale(1); }
   }
-
   .carta.tremer { animation: tremer 0.4s ease-in-out; }
   @keyframes tremer {
     0%, 100% { transform: translateX(0); }
@@ -405,17 +492,13 @@
     60% { transform: translateX(-4px); }
     80% { transform: translateX(4px); }
   }
-
-  .carta.festa {
-    animation: onda 0.7s ease-in-out;
-    animation-delay: calc(var(--i) * 40ms);
-  }
+  .carta.festa { animation: onda 0.7s ease-in-out; animation-delay: calc(var(--i) * 40ms); }
   @keyframes onda {
     0%, 100% { transform: translateY(0); }
     40%      { transform: translateY(-16px) scale(1.1); }
   }
 
-  /* ---------- Textos flutuantes ("Par!", "Combo x3!") ---------- */
+  /* ---------- Textos flutuantes ---------- */
   .flutuante {
     position: fixed;
     z-index: 30;
@@ -442,7 +525,7 @@
     align-items: center;
     gap: 8px;
     padding: 20px 26px;
-    width: min(340px, 100%);
+    width: min(360px, 100%);
     text-align: center;
     background: var(--painel);
     border-radius: 16px;
@@ -455,21 +538,38 @@
   }
   .resultado .ganho { color: var(--destaque); font-weight: 700; font-size: 1.15rem; }
   .resultado .total { font-size: 0.9rem; opacity: 0.8; }
+  .resultado .missao { color: var(--acerto); font-size: 0.9rem; }
   .resultado .botoes-linha { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
 
-  @media (max-width: 420px) {
-    h1 { font-size: 2.1rem; }
-    .tabuleiro { grid-template-columns: repeat(4, 68px); gap: 10px; }
-    .carta { width: 68px; height: 68px; }
-    .frente { font-size: 1.6rem; }
+  /* ---------- Espaço reservado para anúncio (só aparece se ANUNCIOS.ativo = true) ---------- */
+  .anuncio {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    background: rgba(8, 12, 16, 0.92);
+    text-align: center;
+  }
+  .anuncio .caixa-anuncio {
+    width: min(320px, 100%);
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    opacity: 0.8;
   }
 
   /* Quem pediu menos movimento no sistema recebe o jogo sem animações. */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation: none !important;
-      transition: none !important;
-    }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
@@ -481,45 +581,75 @@
 
   <button class="som" id="botao-som" type="button" aria-label="Ligar ou desligar o som">🔊</button>
 
-  <!-- ===================== TELA 1: MENU ===================== -->
+  <!-- ===================== MENU ===================== -->
   <div class="tela" id="tela-menu">
     <h1 id="titulo-menu">Jogo da Memória</h1>
-    <p class="subtitulo">Encontre os 8 pares</p>
+    <p class="subtitulo">Encontre todos os pares</p>
     <p class="chip"><span class="moeda-icone">🪙</span> Moedas: <b id="menu-moedas">0</b></p>
     <div class="opcoes">
       <button class="opcao" id="botao-solo" type="button" style="--i:0">🎮 Jogar solo</button>
       <button class="opcao" id="botao-cpu" type="button" style="--i:1">🤖 Contra a máquina</button>
-      <button class="opcao" id="botao-loja" type="button" style="--i:2">🛍️ Loja de cartas</button>
+      <button class="opcao" id="botao-desafios" type="button" style="--i:2">🎯 Desafios <span class="aviso-badge" id="badge-desafios"></span></button>
+      <button class="opcao" id="botao-loja" type="button" style="--i:3">🛍️ Loja de cartas</button>
     </div>
   </div>
 
-  <!-- ================ TELA 2: ESCOLHA DO NÍVEL ================ -->
+  <!-- ================ ESCOLHA DO NÍVEL ================ -->
   <div class="tela oculta" id="tela-nivel">
     <h2>Escolha o nível</h2>
     <div class="opcoes">
       <button class="opcao" data-nivel="facil" type="button" style="--i:0">
-        🌱 Fácil <small>A máquina esquece quase tudo · +2 moedas se vencer</small>
+        🌱 Fácil <small>A máquina esquece e erra bastante</small>
       </button>
       <button class="opcao" data-nivel="media" type="button" style="--i:1">
-        ⚡ Média <small>Lembra das últimas cartas · +4 moedas se vencer</small>
+        ⚡ Média <small>Memoriza parte das cartas</small>
       </button>
       <button class="opcao" data-nivel="dificil" type="button" style="--i:2">
-        🔥 Difícil <small>Nunca esquece uma carta · +8 moedas se vencer</small>
+        🔥 Difícil <small>Aproveita quase tudo que viu</small>
       </button>
     </div>
     <button class="link-voltar" id="voltar-menu" type="button">Voltar</button>
   </div>
 
-  <!-- ================= TELA 3: LOJA DE CARTAS ================= -->
+  <!-- ================ TAMANHO DO TABULEIRO ================ -->
+  <div class="tela oculta" id="tela-tamanho">
+    <h2>Tamanho do tabuleiro</h2>
+    <div class="opcoes">
+      <button class="opcao" data-tamanho="pequeno" type="button" style="--i:0">
+        🟢 Pequeno <small>6 pares · moedas ×0,75</small>
+      </button>
+      <button class="opcao" data-tamanho="medio" type="button" style="--i:1">
+        🟡 Médio <small>8 pares · moedas ×1</small>
+      </button>
+      <button class="opcao" data-tamanho="grande" type="button" style="--i:2">
+        🔴 Grande <small>12 pares · moedas ×1,5</small>
+      </button>
+    </div>
+    <button class="link-voltar" id="voltar-tamanho" type="button">Voltar</button>
+  </div>
+
+  <!-- ================= LOJA DE CARTAS ================= -->
   <div class="tela oculta" id="tela-loja">
     <h2>Loja de cartas</h2>
     <p class="chip"><span class="moeda-icone">🪙</span> Moedas: <b id="loja-moedas">0</b></p>
     <div class="lista-skins" id="lista-skins"></div>
-    <p class="mensagem-loja" id="mensagem-loja"></p>
+    <div class="detalhe-skin" id="detalhe-skin"></div>
+    <p class="mensagem-loja" id="mensagem-loja" aria-live="polite"></p>
     <button class="link-voltar" id="voltar-menu-loja" type="button">Voltar</button>
   </div>
 
-  <!-- ===================== TELA 4: JOGO ===================== -->
+  <!-- ================= DESAFIOS ================= -->
+  <div class="tela oculta" id="tela-desafios">
+    <h2>Desafios</h2>
+    <p class="chip"><span class="moeda-icone">🪙</span> Moedas: <b id="desafios-moedas">0</b></p>
+    <h4>Desafios de hoje <span style="font-weight:400;opacity:.7">(novos todo dia)</span></h4>
+    <div class="lista-desafios" id="lista-diarios"></div>
+    <h4>Objetivos</h4>
+    <div class="lista-desafios" id="lista-objetivos"></div>
+    <button class="link-voltar" id="voltar-menu-desafios" type="button">Voltar</button>
+  </div>
+
+  <!-- ===================== JOGO ===================== -->
   <div class="tela oculta" id="tela-jogo">
     <h2 id="titulo-jogo">Jogo da Memória</h2>
 
@@ -529,7 +659,7 @@
     </div>
     <div class="linha-chips" id="placar"></div>
     <div class="barra" aria-hidden="true"><i id="barra-preenchida"></i></div>
-    <p class="vez" id="vez"></p>
+    <p class="vez" id="vez" aria-live="polite"></p>
 
     <div class="tabuleiro" id="tabuleiro"></div>
 
@@ -545,48 +675,105 @@
     <button class="link-voltar" id="sair-jogo" type="button">Voltar ao menu</button>
   </div>
 
+  <!-- Espaço reservado para o anúncio entre partidas (desligado por padrão) -->
+  <div class="anuncio oculta" id="anuncio" role="dialog" aria-label="Anúncio">
+    <div class="caixa-anuncio" id="caixa-anuncio">Espaço reservado para anúncio</div>
+    <button class="botao" id="botao-fechar-anuncio" type="button" disabled>Continuar</button>
+  </div>
+
 <script>
 /* ===============================================================
    JAVASCRIPT — a lógica do jogo.
-   Blocos numerados. Leia de cima pra baixo: dados, salvamento,
-   som, efeitos visuais, e por fim o jogo em si.
+   Blocos numerados: dados, salvamento, som, efeitos, desafios,
+   loja, anúncios e o jogo em si.
    =============================================================== */
 
 // ---------------------------------------------------------------
 // 1) DADOS DO JOGO
 // ---------------------------------------------------------------
 
-// Os símbolos. Cada um aparece duas vezes, formando 8 pares.
-const simbolos = ["🍋", "🌵", "🐙", "🎸", "🚀", "🧊", "🍕", "🦊"];
+// 12 símbolos. O tabuleiro usa os N primeiros, conforme o tamanho escolhido.
+const simbolos = ["🍋", "🌵", "🐙", "🎸", "🚀", "🧊", "🍕", "🦊", "🍩", "🐢", "🎲", "🌈"];
 
-/* A "inteligência" da máquina mora aqui:
-   chanceDeMemorizar → chance (0 a 1) de anotar uma carta virada
-   limiteDeMemoria   → quantas cartas ela lembra ao mesmo tempo
-   pausa             → tempo que ela "pensa" entre as cartas (ms)
-   bonus             → moedas extras se você vencer nesse nível     */
-const niveis = {
-  facil:   { nome: "Fácil",   chanceDeMemorizar: 0.25, limiteDeMemoria: 2,  pausa: 900, bonus: 2 },
-  media:   { nome: "Média",   chanceDeMemorizar: 0.65, limiteDeMemoria: 6,  pausa: 750, bonus: 4 },
-  dificil: { nome: "Difícil", chanceDeMemorizar: 1.00, limiteDeMemoria: 16, pausa: 600, bonus: 8 }
+/* Tamanhos do tabuleiro.
+   fator → multiplica as moedas ganhas (tabuleiro maior paga mais). */
+const tamanhos = {
+  pequeno: { nome: "Pequeno", pares: 6,  fator: 0.75 },
+  medio:   { nome: "Médio",   pares: 8,  fator: 1 },
+  grande:  { nome: "Grande",  pares: 12, fator: 1.5 }
 };
 
-/* As skins. Cada uma agora muda o clima do jogo inteiro:
-   versoA/versoB → degradê do verso das cartas
-   frente        → cor da frente das cartas
-   fundo/painel  → cor de fundo da tela e dos painéis
-   glow          → cor das manchas de luz que flutuam no fundo
-   padrao        → o desenho no verso da carta
-   custo         → moedas pra comprar (0 = já vem liberada)         */
+/* A "inteligência" da máquina:
+   chanceDeMemorizar → chance de anotar uma carta que viu
+   limiteDeMemoria   → quantas cartas ela lembra ao mesmo tempo
+   chanceDeErro      → mesmo lembrando, chance de se distrair e virar a carta errada
+                       (é isso que faz o difícil parecer humano, e não um robô infalível)
+   pausa             → tempo que ela "pensa" entre as cartas (ms), com uma variação aleatória
+   bonus             → moedas extras se você vencer nesse nível */
+const niveis = {
+  facil:   { nome: "Fácil",   chanceDeMemorizar: 0.25, limiteDeMemoria: 2,  chanceDeErro: 0.35, pausa: 950, bonus: 2 },
+  media:   { nome: "Média",   chanceDeMemorizar: 0.65, limiteDeMemoria: 6,  chanceDeErro: 0.15, pausa: 800, bonus: 4 },
+  dificil: { nome: "Difícil", chanceDeMemorizar: 0.95, limiteDeMemoria: 99, chanceDeErro: 0.07, pausa: 650, bonus: 8 }
+};
+
+// Raridades das skins.
+const raridades = {
+  comum:    { nome: "Comum",    cor: "#9DB4B0" },
+  rara:     { nome: "Rara",     cor: "#4CC9F0" },
+  epica:    { nome: "Épica",    cor: "#B76CFF" },
+  lendaria: { nome: "Lendária", cor: "#F2B705" }
+};
+
+/* As skins. Cada uma muda o clima do jogo inteiro:
+   versoA/versoB → degradê do verso · frente → cor da frente
+   fundo/painel → cores da tela · glow → luzes do fundo
+   padrao → desenho no verso · raridade e custo → loja */
 const skins = [
-  { id: "classico", nome: "Clássico",   custo: 0,   versoA: "#2F5D62", versoB: "#24494D", frente: "#F1E3C8", fundo: "#17313B", painel: "#1F3D48", glow: "#2F5D62", padrao: "◆" },
-  { id: "neon",     nome: "Neon",       custo: 25,  versoA: "#7209B7", versoB: "#3A0CA3", frente: "#E9E4FF", fundo: "#150E2E", painel: "#221845", glow: "#7209B7", padrao: "✦" },
-  { id: "sol",      nome: "Pôr do sol", custo: 60,  versoA: "#E4572E", versoB: "#F2B705", frente: "#FFF4E0", fundo: "#2B1A1F", painel: "#3B2428", glow: "#E4572E", padrao: "☀" },
-  { id: "floresta", nome: "Floresta",   custo: 120, versoA: "#2D6A4F", versoB: "#1B4332", frente: "#E9F5DB", fundo: "#10241A", painel: "#193324", glow: "#2D6A4F", padrao: "❀" }
+  { id: "classico", nome: "Clássico",   raridade: "comum",    custo: 0,   versoA: "#2F5D62", versoB: "#24494D", frente: "#F1E3C8", fundo: "#17313B", painel: "#1F3D48", glow: "#2F5D62", padrao: "◆" },
+  { id: "floresta", nome: "Floresta",   raridade: "comum",    custo: 40,  versoA: "#2D6A4F", versoB: "#1B4332", frente: "#E9F5DB", fundo: "#10241A", painel: "#193324", glow: "#2D6A4F", padrao: "❀" },
+  { id: "oceano",   nome: "Oceano",     raridade: "comum",    custo: 40,  versoA: "#0077B6", versoB: "#023E8A", frente: "#E0F4FF", fundo: "#0B1D33", painel: "#12304F", glow: "#0077B6", padrao: "≈" },
+  { id: "sol",      nome: "Pôr do sol", raridade: "rara",     custo: 90,  versoA: "#E4572E", versoB: "#F2B705", frente: "#FFF4E0", fundo: "#2B1A1F", painel: "#3B2428", glow: "#E4572E", padrao: "☀" },
+  { id: "neon",     nome: "Neon",       raridade: "rara",     custo: 120, versoA: "#7209B7", versoB: "#3A0CA3", frente: "#E9E4FF", fundo: "#150E2E", painel: "#221845", glow: "#7209B7", padrao: "✦" },
+  { id: "sakura",   nome: "Sakura",     raridade: "epica",    custo: 220, versoA: "#F28CB1", versoB: "#C9487B", frente: "#FFF0F5", fundo: "#2A1620", painel: "#3B2030", glow: "#C9487B", padrao: "✿" },
+  { id: "galaxia",  nome: "Galáxia",    raridade: "epica",    custo: 300, versoA: "#3A0CA3", versoB: "#0B0B3B", frente: "#E6E6FF", fundo: "#07071A", painel: "#121233", glow: "#4361EE", padrao: "★" },
+  { id: "ouro",     nome: "Ouro Real",  raridade: "lendaria", custo: 500, versoA: "#F2B705", versoB: "#B8860B", frente: "#FFF8DC", fundo: "#241C08", painel: "#35290D", glow: "#F2B705", padrao: "♛" }
+];
+
+/* Desafios diários: cada dia o jogo sorteia 3 desta lista (o sorteio usa a data,
+   então é o mesmo pra qualquer pessoa no mesmo dia).
+   tipo:  vitorias, partidas, pares, combo, rapido, vencerCpu
+   meta:  quanto precisa chegar (em "rapido", é o tempo máximo em segundos)
+   premio: moedas ao resgatar */
+const poolDiarios = [
+  { id: "d-vit2",   tipo: "vitorias",  meta: 2,  premio: 15, texto: "Vença 2 partidas" },
+  { id: "d-vit3",   tipo: "vitorias",  meta: 3,  premio: 25, texto: "Vença 3 partidas" },
+  { id: "d-part4",  tipo: "partidas",  meta: 4,  premio: 12, texto: "Jogue 4 partidas" },
+  { id: "d-par20",  tipo: "pares",     meta: 20, premio: 15, texto: "Encontre 20 pares" },
+  { id: "d-par35",  tipo: "pares",     meta: 35, premio: 25, texto: "Encontre 35 pares" },
+  { id: "d-cmb3",   tipo: "combo",     meta: 3,  premio: 15, texto: "Faça um combo x3" },
+  { id: "d-cmb4",   tipo: "combo",     meta: 4,  premio: 25, texto: "Faça um combo x4" },
+  { id: "d-rap60",  tipo: "rapido",    meta: 60, premio: 25, texto: "Vença em até 60s (tabuleiro médio ou maior)" },
+  { id: "d-cpuf",   tipo: "vencerCpu", nivel: "facil", meta: 1, premio: 12, texto: "Vença a máquina no nível Fácil" },
+  { id: "d-cpum",   tipo: "vencerCpu", nivel: "media", meta: 1, premio: 25, texto: "Vença a máquina no nível Média" }
+];
+
+// Objetivos permanentes: aparecem sempre, e cada um só pode ser resgatado uma vez.
+const objetivos = [
+  { id: "o-vit3",   tipo: "vitorias",  meta: 3,   premio: 10, texto: "Vença 3 partidas" },
+  { id: "o-vit10",  tipo: "vitorias",  meta: 10,  premio: 30, texto: "Vença 10 partidas" },
+  { id: "o-vit25",  tipo: "vitorias",  meta: 25,  premio: 80, texto: "Vença 25 partidas" },
+  { id: "o-part20", tipo: "partidas",  meta: 20,  premio: 20, texto: "Jogue 20 partidas" },
+  { id: "o-par100", tipo: "pares",     meta: 100, premio: 40, texto: "Encontre 100 pares" },
+  { id: "o-cmb5",   tipo: "combo",     meta: 5,   premio: 40, texto: "Faça um combo x5" },
+  { id: "o-rap45",  tipo: "rapido",    meta: 45,  premio: 60, texto: "Vença em até 45s (tabuleiro médio ou maior)" },
+  { id: "o-dif",    tipo: "vencerCpu", nivel: "dificil", meta: 1, premio: 60, texto: "Vença a máquina no nível Difícil" }
 ];
 
 // ---------------------------------------------------------------
 // 2) SALVAMENTO NO NAVEGADOR (localStorage)
-//    O try/catch evita erro caso o navegador bloqueie o salvamento.
+//    Tudo que é lido passa por uma "limpeza": se o dado salvo estiver
+//    estranho (apagado, corrompido, mexido), voltamos ao valor padrão
+//    em vez de quebrar o jogo.
 // ---------------------------------------------------------------
 
 function ler(chave, padrao) {
@@ -606,52 +793,146 @@ function salvar(chave, valor) {
   }
 }
 
-let moedas = ler("memoria-moedas", 0);
-let skinsCompradas = ler("memoria-skins", ["classico"]);
-let skinAtualId = ler("memoria-skin", "classico");
-let melhoresTempos = ler("memoria-melhores", {});
-let somLigado = ler("memoria-som", true);
+function lerNumero(chave, padrao) {
+  const valor = ler(chave, padrao);
+  return Number.isFinite(valor) && valor >= 0 ? Math.floor(valor) : padrao;
+}
 
-if (!skinsCompradas.includes(skinAtualId)) skinAtualId = "classico";
+function novoEstado() {
+  return { partidas: 0, vitorias: 0, pares: 0, combo: 0, melhorRapido: null, cpu: { facil: 0, media: 0, dificil: 0 } };
+}
 
-// Se o sistema pediu menos movimento, pulamos partículas e confete.
+function normalizarEstado(e) {
+  const base = novoEstado();
+  if (!e || typeof e !== "object") return base;
+  ["partidas", "vitorias", "pares", "combo"].forEach(function (k) {
+    if (Number.isFinite(e[k]) && e[k] >= 0) base[k] = Math.floor(e[k]);
+  });
+  if (Number.isFinite(e.melhorRapido) && e.melhorRapido >= 0) base.melhorRapido = e.melhorRapido;
+  if (e.cpu && typeof e.cpu === "object") {
+    ["facil", "media", "dificil"].forEach(function (k) {
+      if (Number.isFinite(e.cpu[k]) && e.cpu[k] >= 0) base.cpu[k] = Math.floor(e.cpu[k]);
+    });
+  }
+  return base;
+}
+
+function normalizarResgatados(r) {
+  const limpo = {};
+  if (r && typeof r === "object") {
+    Object.keys(r).forEach(function (k) { if (r[k] === true) limpo[k] = true; });
+  }
+  return limpo;
+}
+
+let moedas = 0;
+let skinsCompradas = ["classico"];
+let skinAtualId = "classico";
+let melhoresTempos = {};
+let melhoresPontos = {};
+let somLigado = true;
+let dia = null;          // desafios de hoje: { data, estado, resgatados }
+let obj = null;          // objetivos permanentes: { estado, resgatados }
+
+/* Lê tudo do navegador. Também é chamado antes de comprar e resgatar:
+   se o jogo estiver aberto em duas abas, a segunda aba não consegue
+   "repetir" uma compra ou recompensa com dados velhos na memória. */
+function carregarSalvos() {
+  moedas = lerNumero("memoria-moedas", 0);
+
+  const compradas = ler("memoria-skins", ["classico"]);
+  skinsCompradas = Array.isArray(compradas)
+    ? compradas.filter(function (id) { return skins.some(function (s) { return s.id === id; }); })
+    : [];
+  if (!skinsCompradas.includes("classico")) skinsCompradas.push("classico");
+
+  const equipada = ler("memoria-skin", "classico");
+  skinAtualId = skinsCompradas.includes(equipada) ? equipada : "classico";
+
+  const tempos = ler("memoria-melhores", {});
+  melhoresTempos = tempos && typeof tempos === "object" ? tempos : {};
+  const pts = ler("memoria-melhores-pontos", {});
+  melhoresPontos = pts && typeof pts === "object" ? pts : {};
+
+  somLigado = ler("memoria-som", true) !== false;
+
+  const d = ler("memoria-dia", null);
+  dia = d && typeof d === "object" && typeof d.data === "string"
+    ? { data: d.data, estado: normalizarEstado(d.estado), resgatados: normalizarResgatados(d.resgatados) }
+    : null;
+
+  const o = ler("memoria-obj", null);
+  obj = { estado: normalizarEstado(o && o.estado), resgatados: normalizarResgatados(o && o.resgatados) };
+
+  garantirDia();
+}
+
+// Se mudou o dia, os desafios diários recomeçam do zero.
+function hojeTexto() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function garantirDia() {
+  const hoje = hojeTexto();
+  if (!dia || dia.data !== hoje) {
+    dia = { data: hoje, estado: novoEstado(), resgatados: {} };
+    salvar("memoria-dia", dia);
+  }
+}
+
+// Modo leve e "menos movimento"
 const menosMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const aparelhoModesto = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 2;
+const leve = menosMovimento || aparelhoModesto;
+if (aparelhoModesto) document.documentElement.classList.add("leve");
+const fatorParticulas = leve ? 0.45 : 1;
 
 // ---------------------------------------------------------------
-// 3) ESTADO DA PARTIDA — o que muda enquanto você joga
+// 3) ESTADO DA PARTIDA
 // ---------------------------------------------------------------
 
 let modo = "solo";           // "solo" ou "cpu"
 let nivelId = "facil";
 let nivel = niveis.facil;
+let tamanhoId = "medio";
+let tamanho = tamanhos.medio;
 
-let cartas = [];             // todos os botões do tabuleiro
-let cartasViradas = [];      // as abertas agora (no máximo 2)
-let travado = false;         // bloqueia cliques em momentos errados
+let cartas = [];
+let cartasViradas = [];
+let travado = false;         // bloqueia cliques durante animações
+let jogoEmAndamento = false; // true só enquanto a partida está rolando (anúncios nunca aparecem aqui)
+let partidaFinalizada = false;
 let jogadas = 0;
+let erros = 0;               // tentativas erradas suas
 let paresEncontrados = 0;
 let pontos = { voce: 0, cpu: 0 };
 let vezDaCpu = false;
 
-let serie = 0;               // acertos seguidos de quem está jogando (o "combo")
-let melhorSerie = 0;         // maior combo da partida
-let bonusCombo = 0;          // moedas extras ganhas por combos seus
+let serie = 0;               // acertos seguidos de quem está jogando
+let melhorSerie = 0;         // maior combo SEU na partida
+let bonusCombo = 0;
 
-let memoria = {};            // memória da máquina: posição → símbolo
+let memoria = {};
 let ordemDaMemoria = [];
 
-let partida = 0;             // número da partida; evita timers "velhos" mexerem na nova
-let inicioTempo = null;      // quando a primeira carta foi virada
-let relogio = null;          // o setInterval do cronômetro
+let partida = 0;             // número da partida; timers "velhos" se ignoram sozinhos
+let inicioTempo = null;
+let relogio = null;
+
+let skinEmFoco = "classico"; // skin selecionada na loja (ainda não necessariamente comprada)
 
 // ---------------------------------------------------------------
-// 4) ATALHOS PARA OS ELEMENTOS DO HTML
+// 4) ATALHOS PARA ELEMENTOS DO HTML
 // ---------------------------------------------------------------
 
 const telaMenu = document.getElementById("tela-menu");
 const telaNivel = document.getElementById("tela-nivel");
+const telaTamanho = document.getElementById("tela-tamanho");
 const telaLoja = document.getElementById("tela-loja");
+const telaDesafios = document.getElementById("tela-desafios");
 const telaJogo = document.getElementById("tela-jogo");
+const todasTelas = [telaMenu, telaNivel, telaTamanho, telaLoja, telaDesafios, telaJogo];
 
 const tabuleiro = document.getElementById("tabuleiro");
 const placar = document.getElementById("placar");
@@ -666,19 +947,21 @@ const resultadoDetalhes = document.getElementById("resultado-detalhes");
 
 const menuMoedas = document.getElementById("menu-moedas");
 const lojaMoedas = document.getElementById("loja-moedas");
+const desafiosMoedas = document.getElementById("desafios-moedas");
+const badgeDesafios = document.getElementById("badge-desafios");
 const listaSkins = document.getElementById("lista-skins");
+const detalheSkin = document.getElementById("detalhe-skin");
 const mensagemLoja = document.getElementById("mensagem-loja");
+const listaDiarios = document.getElementById("lista-diarios");
+const listaObjetivos = document.getElementById("lista-objetivos");
 const botaoSom = document.getElementById("botao-som");
 
 // ---------------------------------------------------------------
-// 5) SONS
-//    Nada de arquivos de áudio: o navegador sintetiza cada som com
-//    um "oscilador" (uma onda com frequência, volume e duração).
+// 5) SONS (sintetizados pelo navegador, sem arquivos de áudio)
 // ---------------------------------------------------------------
 
 let audioCtx = null;
 
-// Navegadores só liberam áudio depois de um clique ou tecla do jogador.
 function garantirAudio() {
   if (!audioCtx) {
     const Contexto = window.AudioContext || window.webkitAudioContext;
@@ -687,7 +970,6 @@ function garantirAudio() {
   if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
 }
 
-// Toca uma nota: frequência (Hz), quando começa (s), duração (s), formato da onda, volume.
 function tom(frequencia, inicio, duracao, tipo, volume) {
   if (!somLigado || !audioCtx) return;
   const t0 = audioCtx.currentTime + inicio;
@@ -697,7 +979,6 @@ function tom(frequencia, inicio, duracao, tipo, volume) {
   oscilador.type = tipo || "sine";
   oscilador.frequency.value = frequencia;
 
-  // O volume sobe rápido e desce suave, pra o som não "estalar".
   ganho.gain.setValueAtTime(0.0001, t0);
   ganho.gain.exponentialRampToValueAtTime(volume || 0.15, t0 + 0.01);
   ganho.gain.exponentialRampToValueAtTime(0.0001, t0 + duracao);
@@ -715,7 +996,6 @@ const sons = {
   vitoria: function () { [523, 659, 784, 1047].forEach(function (f, i) { tom(f, i * 0.14, 0.26, "sine", 0.15); }); },
   derrota: function () { [392, 330, 262].forEach(function (f, i) { tom(f, i * 0.2, 0.3, "triangle", 0.13); }); },
   moeda:   function () { tom(988, 0, 0.08, "square", 0.05); tom(1319, 0.08, 0.2, "square", 0.05); },
-  // O combo sobe de tom: quanto maior a sequência, mais agudo.
   combo:   function (n) { tom(660 + n * 90, 0, 0.1, "square", 0.05); tom(990 + n * 90, 0.09, 0.18, "square", 0.05); }
 };
 
@@ -725,9 +1005,6 @@ function atualizarBotaoSom() {
 
 // ---------------------------------------------------------------
 // 6) EFEITOS VISUAIS: partículas, confete, textos flutuantes
-//    Um canvas do tamanho da tela fica por cima de tudo. Cada
-//    partícula tem posição, velocidade, cor e "vida" (que vai
-//    diminuindo até sumir). O laço só roda enquanto houver partícula.
 // ---------------------------------------------------------------
 
 const fx = document.getElementById("fx");
@@ -750,19 +1027,17 @@ function adicionarParticula(p) {
   }
 }
 
-// Explosão de bolinhas saindo de um ponto.
 function explodir(x, y, cores, quantidade) {
   if (menosMovimento) return;
-  for (let i = 0; i < quantidade; i++) {
+  const total = Math.max(4, Math.round(quantidade * fatorParticulas));
+  for (let i = 0; i < total; i++) {
     const angulo = Math.random() * Math.PI * 2;
     const velocidade = 2 + Math.random() * 4.5;
     adicionarParticula({
       x: x, y: y,
       vx: Math.cos(angulo) * velocidade,
       vy: Math.sin(angulo) * velocidade - 1.5,
-      queda: 0.12,
-      vida: 1,
-      decai: 0.025,
+      queda: 0.12, vida: 1, decai: 0.025,
       tam: 3 + Math.random() * 4,
       cor: cores[Math.floor(Math.random() * cores.length)],
       forma: "bola"
@@ -770,18 +1045,16 @@ function explodir(x, y, cores, quantidade) {
   }
 }
 
-// Chuva de papel picado caindo do topo da tela.
 function confete(cores) {
   if (menosMovimento) return;
-  for (let i = 0; i < 140; i++) {
+  const total = Math.round(140 * fatorParticulas);
+  for (let i = 0; i < total; i++) {
     adicionarParticula({
       x: Math.random() * fx.width,
       y: -20 - Math.random() * fx.height * 0.4,
       vx: (Math.random() - 0.5) * 3,
       vy: 2 + Math.random() * 3.5,
-      queda: 0.04,
-      vida: 1,
-      decai: 0.004,
+      queda: 0.04, vida: 1, decai: 0.004,
       tam: 6 + Math.random() * 6,
       cor: cores[Math.floor(Math.random() * cores.length)],
       giro: Math.random() * 6,
@@ -793,9 +1066,7 @@ function confete(cores) {
 
 function loopFx() {
   fxCtx.clearRect(0, 0, fx.width, fx.height);
-  particulas = particulas.filter(function (p) {
-    return p.vida > 0 && p.y < fx.height + 30;
-  });
+  particulas = particulas.filter(function (p) { return p.vida > 0 && p.y < fx.height + 30; });
 
   particulas.forEach(function (p) {
     p.vy += p.queda;
@@ -829,13 +1100,15 @@ function loopFx() {
   }
 }
 
-// Centro de um elemento na tela (pra saber de onde soltar partículas).
+function limparEfeitos() {
+  particulas = [];
+}
+
 function centroDe(elemento) {
   const caixa = elemento.getBoundingClientRect();
   return { x: caixa.left + caixa.width / 2, y: caixa.top + caixa.height / 2 };
 }
 
-// Texto que sobe e some, saindo de cima de um elemento.
 function flutuar(texto, referencia, classe) {
   const caixa = referencia.getBoundingClientRect();
   const balao = document.createElement("div");
@@ -847,7 +1120,6 @@ function flutuar(texto, referencia, classe) {
   setTimeout(function () { balao.remove(); }, 1100);
 }
 
-// Faz um número "contar" de um valor até outro.
 function animarNumero(elemento, de, para, duracao) {
   if (menosMovimento || de === para) {
     elemento.textContent = para;
@@ -862,15 +1134,13 @@ function animarNumero(elemento, de, para, duracao) {
   requestAnimationFrame(passo);
 }
 
-// Cores usadas nas partículas, tiradas da skin atual.
 function coresDaSkin() {
   const skin = skinAtual();
   return [skin.versoA, skin.versoB, "#F2B705", "#FFFFFF"];
 }
 
-// Símbolos flutuando no fundo, criados uma vez só.
 function criarFundoFlutuante() {
-  if (menosMovimento) return;
+  if (leve) return;
   const area = document.getElementById("fundo-flutuante");
   for (let i = 0; i < 12; i++) {
     const item = document.createElement("span");
@@ -878,17 +1148,16 @@ function criarFundoFlutuante() {
     item.style.left = (Math.random() * 100) + "%";
     item.style.fontSize = (22 + Math.random() * 34) + "px";
     item.style.animationDuration = (16 + Math.random() * 16) + "s";
-    item.style.animationDelay = "-" + (Math.random() * 28) + "s";  // negativo: já começam no meio do caminho
+    item.style.animationDelay = "-" + (Math.random() * 28) + "s";
     area.appendChild(item);
   }
 }
 
-// O título do menu: cada letra vira um <span> pra cair com atraso diferente.
 function montarTitulo() {
   const titulo = document.getElementById("titulo-menu");
   const letras = Array.from(titulo.textContent);
   titulo.innerHTML = letras.map(function (letra, i) {
-    return '<span style="--i:' + i + '">' + (letra === " " ? "&nbsp;" : letra) + "</span>";
+    return '<span style="--i:' + i + '" aria-hidden="true">' + (letra === " " ? "&nbsp;" : letra) + "</span>";
   }).join("");
   titulo.setAttribute("aria-label", "Jogo da Memória");
 }
@@ -898,18 +1167,18 @@ function montarTitulo() {
 // ---------------------------------------------------------------
 
 function mostrarTela(tela) {
-  [telaMenu, telaNivel, telaLoja, telaJogo].forEach(function (t) {
-    t.classList.add("oculta");
-  });
+  todasTelas.forEach(function (t) { t.classList.add("oculta"); });
   tela.classList.remove("oculta");
 }
 
 function mostrarMenu() {
+  carregarSalvos();
   menuMoedas.textContent = moedas;
+  const prontos = contarResgataveis();
+  badgeDesafios.textContent = prontos > 0 ? prontos : "";
   mostrarTela(telaMenu);
 }
 
-// Embaralha uma lista: sorteia uma posição e troca com a atual.
 function embaralhar(lista) {
   for (let i = lista.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -918,7 +1187,6 @@ function embaralhar(lista) {
   return lista;
 }
 
-// Transforma milissegundos em "mm:ss".
 function formatarTempo(ms) {
   const segundos = Math.floor(ms / 1000);
   const mm = String(Math.floor(segundos / 60)).padStart(2, "0");
@@ -926,7 +1194,6 @@ function formatarTempo(ms) {
   return mm + ":" + ss;
 }
 
-// O cronômetro só começa quando a primeira carta é virada.
 function iniciarCronometro() {
   inicioTempo = Date.now();
   relogio = setInterval(function () {
@@ -939,9 +1206,9 @@ function pararCronometro() {
   relogio = null;
 }
 
-// Cada modo tem seu próprio recorde de tempo.
+// Cada combinação de modo + nível + tamanho tem seu próprio recorde.
 function chaveDoRecorde() {
-  return modo === "solo" ? "solo" : "cpu-" + nivelId;
+  return (modo === "solo" ? "solo" : "cpu-" + nivelId) + "-" + tamanhoId;
 }
 
 function atualizarMelhorTempo() {
@@ -950,14 +1217,183 @@ function atualizarMelhorTempo() {
 }
 
 // ---------------------------------------------------------------
-// 8) SKINS E LOJA
+// 8) DESAFIOS E OBJETIVOS
+//    Um único jeito de medir progresso serve para os dois.
+//    "estado" guarda o que você fez (partidas, vitórias, pares, maior
+//    combo, melhor tempo, vitórias contra a máquina por nível).
+// ---------------------------------------------------------------
+
+// Sorteio com semente: a mesma data sempre dá os mesmos 3 desafios.
+function semente(texto) {
+  let h = 0;
+  for (let i = 0; i < texto.length; i++) h = (h * 31 + texto.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function aleatorioComSemente(s) {
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+function escolherDiarios(data) {
+  const sorteio = aleatorioComSemente(semente(data));
+  const lista = poolDiarios.slice();
+  for (let i = lista.length - 1; i > 0; i--) {
+    const j = Math.floor(sorteio() * (i + 1));
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+  }
+  // Três desafios de tipos diferentes, pra não repetir a mesma ideia.
+  const escolhidos = [];
+  const tipos = {};
+  lista.forEach(function (m) {
+    if (escolhidos.length < 3 && !tipos[m.tipo]) {
+      tipos[m.tipo] = true;
+      escolhidos.push(m);
+    }
+  });
+  return escolhidos;
+}
+
+// Quanto precisa pra completar. "rapido" e "vencerCpu" são do tipo "fez ou não fez".
+function metaEfetiva(m) {
+  return (m.tipo === "rapido" || m.tipo === "vencerCpu") ? 1 : m.meta;
+}
+
+function progressoDe(m, est) {
+  switch (m.tipo) {
+    case "vitorias":  return est.vitorias;
+    case "partidas":  return est.partidas;
+    case "pares":     return est.pares;
+    case "combo":     return est.combo;
+    case "rapido":    return (est.melhorRapido !== null && est.melhorRapido <= m.meta) ? 1 : 0;
+    case "vencerCpu": return est.cpu[m.nivel] > 0 ? 1 : 0;
+  }
+  return 0;
+}
+
+// Soma o resultado de uma partida ao estado (do dia ou permanente).
+function aplicarPartida(est, r) {
+  est.partidas++;
+  if (r.venceu) est.vitorias++;
+  est.pares += r.pares;
+  if (r.combo > est.combo) est.combo = r.combo;
+  if (r.venceu && r.totalPares >= 8) {
+    if (est.melhorRapido === null || r.tempoSeg < est.melhorRapido) est.melhorRapido = r.tempoSeg;
+  }
+  if (r.venceu && r.modo === "cpu") est.cpu[r.nivel]++;
+}
+
+function todosOsDesafios() {
+  garantirDia();
+  const lista = [];
+  escolherDiarios(dia.data).forEach(function (m) { lista.push({ m: m, origem: "dia" }); });
+  objetivos.forEach(function (m) { lista.push({ m: m, origem: "obj" }); });
+  return lista;
+}
+
+function estadoDe(origem) { return origem === "dia" ? dia.estado : obj.estado; }
+function resgatadosDe(origem) { return origem === "dia" ? dia.resgatados : obj.resgatados; }
+
+function estaCompleto(item) {
+  return progressoDe(item.m, estadoDe(item.origem)) >= metaEfetiva(item.m);
+}
+
+function contarResgataveis() {
+  return todosOsDesafios().filter(function (item) {
+    return estaCompleto(item) && !resgatadosDe(item.origem)[item.m.id];
+  }).length;
+}
+
+// Registra o fim de uma partida e devolve os desafios que acabaram de ficar completos.
+function registrarDesafios(r) {
+  garantirDia();
+  const antes = todosOsDesafios().filter(estaCompleto).map(function (i) { return i.m.id; });
+
+  aplicarPartida(dia.estado, r);
+  aplicarPartida(obj.estado, r);
+  salvar("memoria-dia", dia);
+  salvar("memoria-obj", obj);
+
+  return todosOsDesafios().filter(function (item) {
+    return estaCompleto(item) && !antes.includes(item.m.id);
+  }).map(function (item) { return item.m.texto; });
+}
+
+function linhaDeDesafio(item) {
+  const m = item.m;
+  const meta = metaEfetiva(m);
+  const prog = Math.min(progressoDe(m, estadoDe(item.origem)), meta);
+  const completo = prog >= meta;
+  const resgatado = !!resgatadosDe(item.origem)[m.id];
+
+  const caixa = document.createElement("div");
+  caixa.className = "desafio" + (resgatado ? " feito" : "");
+
+  const textoNum = meta === 1 ? (completo ? "Completo" : "Não concluído") : prog + " / " + meta;
+  caixa.innerHTML =
+    '<span class="texto">' + m.texto + '</span>' +
+    '<span class="barra-mini"><i style="width:' + Math.round(prog / meta * 100) + '%"></i></span>' +
+    '<span class="num">' + textoNum + '</span>';
+
+  const botao = document.createElement("button");
+  botao.type = "button";
+  botao.className = "botao";
+  if (resgatado) {
+    botao.textContent = "Resgatado ✓";
+    botao.disabled = true;
+  } else if (completo) {
+    botao.textContent = "Resgatar +" + m.premio + " 🪙";
+    botao.addEventListener("click", function () { resgatar(item, botao); });
+  } else {
+    botao.textContent = "+" + m.premio + " 🪙";
+    botao.disabled = true;
+  }
+  caixa.appendChild(botao);
+  return caixa;
+}
+
+function desenharDesafios() {
+  carregarSalvos();
+  desafiosMoedas.textContent = moedas;
+  listaDiarios.innerHTML = "";
+  listaObjetivos.innerHTML = "";
+  todosOsDesafios().forEach(function (item) {
+    (item.origem === "dia" ? listaDiarios : listaObjetivos).appendChild(linhaDeDesafio(item));
+  });
+}
+
+/* Resgatar: a recompensa só sai UMA vez. O "resgatado" é marcado e salvo
+   ANTES de somar as moedas, e os dados são relidos do navegador antes de tudo. */
+function resgatar(item, botao) {
+  carregarSalvos();
+  const reg = resgatadosDe(item.origem);
+  if (reg[item.m.id]) return;              // já resgatado
+  if (!estaCompleto(item)) return;         // ainda não completou
+
+  const centro = centroDe(botao);
+  reg[item.m.id] = true;
+  salvar(item.origem === "dia" ? "memoria-dia" : "memoria-obj", item.origem === "dia" ? dia : obj);
+
+  const antes = moedas;
+  moedas += item.m.premio;
+  salvar("memoria-moedas", moedas);
+
+  sons.moeda();
+  explodir(centro.x, centro.y, ["#F2B705", "#FFFFFF", "#7FB069"], 28);
+  desenharDesafios();
+  animarNumero(desafiosMoedas, antes, moedas, 600);
+}
+
+// ---------------------------------------------------------------
+// 9) SKINS E LOJA
 // ---------------------------------------------------------------
 
 function skinAtual() {
   return skins.find(function (s) { return s.id === skinAtualId; }) || skins[0];
 }
 
-// Troca as cores no CSS. Cartas, fundo e painéis mudam de uma vez.
 function aplicarSkin() {
   const skin = skinAtual();
   const raiz = document.documentElement.style;
@@ -969,76 +1405,184 @@ function aplicarSkin() {
   raiz.setProperty("--glow", skin.glow);
 }
 
-function desenharLoja(mensagem) {
+// Estado de cada item da loja: equipada, comprada, à venda (dá pra pagar) ou sem moedas.
+function estadoDaSkin(skin) {
+  if (skinsCompradas.includes(skin.id)) return skin.id === skinAtualId ? "equipada" : "comprada";
+  return moedas >= skin.custo ? "venda" : "sem-moedas";
+}
+
+function rotuloDoEstado(skin, estado) {
+  if (estado === "equipada") return "✓ Equipada";
+  if (estado === "comprada") return "Comprada";
+  if (estado === "venda") return "À venda · 🪙 " + skin.custo;
+  return "🔒 🪙 " + skin.custo;
+}
+
+function desenharLoja(mensagem, animar) {
   lojaMoedas.textContent = moedas;
   mensagemLoja.textContent = mensagem || "";
   listaSkins.innerHTML = "";
 
   skins.forEach(function (skin, indice) {
-    const comprada = skinsCompradas.includes(skin.id);
-    const emUso = skin.id === skinAtualId;
+    const estado = estadoDaSkin(skin);
+    const rar = raridades[skin.raridade];
 
     const botao = document.createElement("button");
     botao.type = "button";
-    botao.className = "skin" + (emUso ? " selecionada" : "") + (comprada ? "" : " bloqueada");
+    botao.className = "skin " + estado + (skin.id === skinEmFoco ? " foco" : "") + (animar ? " anim" : "");
+    botao.dataset.raridade = skin.raridade;
+    botao.style.setProperty("--rar", rar.cor);
     botao.style.setProperty("--i", indice);
-
-    const textoCusto = emUso ? "Em uso" : (comprada ? "Usar" : "🪙 " + skin.custo);
     botao.innerHTML =
-      '<span class="amostra" style="background:linear-gradient(135deg,' + skin.versoA + ',' + skin.versoB + ')">' +
-        skin.padrao +
-      '</span>' +
+      '<span class="amostra" style="background:linear-gradient(135deg,' + skin.versoA + ',' + skin.versoB + ')">' + skin.padrao + '</span>' +
       '<span class="nome">' + skin.nome + '</span>' +
-      '<span class="custo">' + textoCusto + '</span>';
+      '<span class="raridade">' + rar.nome + '</span>' +
+      '<span class="estado">' + rotuloDoEstado(skin, estado) + '</span>';
 
-    botao.addEventListener("click", function () { cliqueNaSkin(skin, botao); });
+    // Tocar só seleciona (mostra os detalhes). Comprar exige o botão do painel,
+    // então um toque acidental nunca gasta moedas.
+    botao.addEventListener("click", function () {
+      skinEmFoco = skin.id;
+      desenharLoja("", false);
+    });
     listaSkins.appendChild(botao);
+  });
+
+  desenharDetalheDaSkin();
+}
+
+function desenharDetalheDaSkin() {
+  const skin = skins.find(function (s) { return s.id === skinEmFoco; }) || skins[0];
+  const estado = estadoDaSkin(skin);
+  const rar = raridades[skin.raridade];
+
+  let rotuloBotao, desabilitado = false;
+  if (estado === "equipada")      { rotuloBotao = "Equipada"; desabilitado = true; }
+  else if (estado === "comprada") { rotuloBotao = "Equipar"; }
+  else if (estado === "venda")    { rotuloBotao = "Comprar por 🪙 " + skin.custo; }
+  else                            { rotuloBotao = "Faltam " + (skin.custo - moedas) + " moedas"; desabilitado = true; }
+
+  detalheSkin.innerHTML =
+    '<div class="previa">' +
+      '<span class="mini" style="background:linear-gradient(135deg,' + skin.versoA + ',' + skin.versoB + ');color:rgba(255,255,255,.45)">' + skin.padrao + '</span>' +
+      '<span class="mini" style="background:' + skin.frente + ';color:#17313B">🍋</span>' +
+    '</div>' +
+    '<div class="info">' +
+      '<h3>' + skin.nome + '</h3>' +
+      '<p style="color:' + rar.cor + ';font-weight:700;opacity:1">' + rar.nome + '</p>' +
+      '<p>' + rotuloDoEstado(skin, estado) + '</p>' +
+      '<button class="botao" id="acao-skin" type="button"' + (desabilitado ? " disabled" : "") + '>' + rotuloBotao + '</button>' +
+    '</div>';
+
+  document.getElementById("acao-skin").addEventListener("click", function (evento) {
+    acaoDaSkin(skin, evento.currentTarget);
   });
 }
 
-function cliqueNaSkin(skin, botao) {
-  const centro = centroDe(botao);   // guardamos antes da loja ser redesenhada
+function acaoDaSkin(skin, botao) {
+  carregarSalvos();   // dados frescos: evita comprar duas vezes em abas diferentes
+  const centro = centroDe(botao);
 
   if (skinsCompradas.includes(skin.id)) {
-    // Já é sua: só passa a usar.
     skinAtualId = skin.id;
     salvar("memoria-skin", skinAtualId);
     aplicarSkin();
-    desenharLoja("Skin " + skin.nome + " em uso.");
-  } else if (moedas >= skin.custo) {
-    // Dá pra pagar: compra e já passa a usar, com uma festinha.
-    const moedasAntes = moedas;
-    moedas -= skin.custo;
-    skinsCompradas.push(skin.id);
-    skinAtualId = skin.id;
-    salvar("memoria-moedas", moedas);
-    salvar("memoria-skins", skinsCompradas);
-    salvar("memoria-skin", skinAtualId);
-    aplicarSkin();
-    sons.moeda();
-    explodir(centro.x, centro.y, [skin.versoA, skin.versoB, "#F2B705", "#FFFFFF"], 40);
-    desenharLoja("Você comprou a skin " + skin.nome + "!");
-    animarNumero(lojaMoedas, moedasAntes, moedas, 600);
-  } else {
-    sons.erro();
-    desenharLoja("Faltam " + (skin.custo - moedas) + " moedas pra liberar " + skin.nome + ".");
+    desenharLoja("Skin " + skin.nome + " equipada.", false);
+    return;
   }
+  if (moedas < skin.custo) {
+    sons.erro();
+    desenharLoja("Faltam " + (skin.custo - moedas) + " moedas pra liberar " + skin.nome + ".", false);
+    return;
+  }
+
+  const moedasAntes = moedas;
+  moedas -= skin.custo;
+  skinsCompradas.push(skin.id);
+  skinAtualId = skin.id;   // compra já equipa
+  salvar("memoria-moedas", moedas);
+  salvar("memoria-skins", skinsCompradas);
+  salvar("memoria-skin", skinAtualId);
+  aplicarSkin();
+  sons.moeda();
+  explodir(centro.x, centro.y, [skin.versoA, skin.versoB, "#F2B705", "#FFFFFF"], 40);
+  desenharLoja("Você comprou e equipou a skin " + skin.nome + "!", false);
+  animarNumero(lojaMoedas, moedasAntes, moedas, 600);
 }
 
 // ---------------------------------------------------------------
-// 9) COMEÇAR E SAIR DE UMA PARTIDA
+// 10) ANÚNCIOS (preparação — DESLIGADO por padrão)
+//     Aqui só existe o "encaixe". Nenhum anúncio real é carregado.
+//     Regras já respeitadas pelo código:
+//       • só aparece ENTRE partidas (nos botões do painel de resultado)
+//       • nunca durante as jogadas (jogoEmAndamento precisa ser false)
+//       • só a cada N partidas, nunca em toda partida
+//     Antes de ligar de verdade: teste bem o jogo, escolha a plataforma
+//     (ex.: AdSense na web, AdMob no app) e leia as regras dela. Elas
+//     costumam exigir aviso de consentimento e política de privacidade.
+// ---------------------------------------------------------------
+
+const ANUNCIOS = {
+  ativo: false,            // mude para true só quando for testar o espaço
+  aCadaPartidas: 3,        // 1 anúncio a cada 3 partidas concluídas
+  segundosParaContinuar: 3
+};
+let partidasDesdeAnuncio = 0;
+let anuncioAberto = false;
+
+const elAnuncio = document.getElementById("anuncio");
+const botaoFecharAnuncio = document.getElementById("botao-fechar-anuncio");
+
+function passarPeloAnuncio(continuar) {
+  if (!ANUNCIOS.ativo || jogoEmAndamento || anuncioAberto || partidasDesdeAnuncio < ANUNCIOS.aCadaPartidas) {
+    continuar();
+    return;
+  }
+  partidasDesdeAnuncio = 0;
+  anuncioAberto = true;
+  elAnuncio.classList.remove("oculta");
+
+  // >>> Aqui entraria a chamada do SDK da plataforma de anúncios. <<<
+
+  let restante = ANUNCIOS.segundosParaContinuar;
+  botaoFecharAnuncio.disabled = true;
+  botaoFecharAnuncio.textContent = "Continuar (" + restante + ")";
+  const contagem = setInterval(function () {
+    restante--;
+    if (restante > 0) {
+      botaoFecharAnuncio.textContent = "Continuar (" + restante + ")";
+    } else {
+      clearInterval(contagem);
+      botaoFecharAnuncio.disabled = false;
+      botaoFecharAnuncio.textContent = "Continuar";
+    }
+  }, 1000);
+
+  botaoFecharAnuncio.onclick = function () {
+    elAnuncio.classList.add("oculta");
+    anuncioAberto = false;
+    continuar();
+  };
+}
+
+// ---------------------------------------------------------------
+// 11) COMEÇAR E SAIR DE UMA PARTIDA
 // ---------------------------------------------------------------
 
 function iniciarJogo() {
   partida++;                 // invalida qualquer timer da partida anterior
   const id = partida;
   pararCronometro();
+  limparEfeitos();
   inicioTempo = null;
 
   cartas = [];
   cartasViradas = [];
-  travado = true;            // trava os cliques enquanto as cartas "caem" no tabuleiro
+  travado = true;            // trava os cliques enquanto as cartas "caem"
+  jogoEmAndamento = true;
+  partidaFinalizada = false;
   jogadas = 0;
+  erros = 0;
   paresEncontrados = 0;
   pontos = { voce: 0, cpu: 0 };
   vezDaCpu = false;
@@ -1048,18 +1592,16 @@ function iniciarJogo() {
   memoria = {};
   ordemDaMemoria = [];
   tabuleiro.innerHTML = "";
+  tabuleiro.className = "tabuleiro " + tamanhoId;
   resultado.classList.add("oculta");
   elTempo.textContent = "00:00";
   atualizarMelhorTempo();
 
-  tituloJogo.textContent = modo === "solo"
-    ? "Jogo da Memória"
-    : "Contra a máquina · " + nivel.nome;
+  tituloJogo.textContent = (modo === "solo" ? "Solo" : "Contra a máquina · " + nivel.nome) + " · " + tamanho.nome;
 
   const skin = skinAtual();
-  const baralho = embaralhar([...simbolos, ...simbolos]);
+  const baralho = embaralhar(simbolos.slice(0, tamanho.pares).concat(simbolos.slice(0, tamanho.pares)));
 
-  // Cada carta tem duas faces: o verso (desenho da skin) e a frente (o símbolo).
   baralho.forEach(function (simbolo, posicao) {
     const carta = document.createElement("button");
     carta.type = "button";
@@ -1074,7 +1616,6 @@ function iniciarJogo() {
         '<span class="frente">' + simbolo + '</span>' +
       '</span>';
     carta.addEventListener("click", function () { cliqueDoJogador(carta); });
-    // Quando a animação de entrada acaba, tiramos a classe (senão ela repetiria).
     carta.addEventListener("animationend", function () { carta.classList.remove("nova"); }, { once: true });
     tabuleiro.appendChild(carta);
     cartas.push(carta);
@@ -1083,27 +1624,30 @@ function iniciarJogo() {
   atualizarPlacar();
   mostrarTela(telaJogo);
 
+  // Libera os cliques quando a última carta termina de cair.
   setTimeout(function () {
     if (id === partida) travado = false;
-  }, menosMovimento ? 0 : 1250);
+  }, menosMovimento ? 0 : cartas.length * 45 + 600);
 }
 
 function sairDoJogo() {
   partida++;
+  jogoEmAndamento = false;
+  travado = false;
   pararCronometro();
+  limparEfeitos();
   mostrarMenu();
 }
 
-// Redesenha o placar, a barra de progresso e o aviso de quem joga.
 function atualizarPlacar() {
-  barra.style.width = (paresEncontrados / simbolos.length * 100) + "%";
+  barra.style.width = (paresEncontrados / tamanho.pares * 100) + "%";
 
   const combo = serie >= 2 ? '<p class="chip combo">🔥 Combo x' + serie + '</p>' : "";
 
   if (modo === "solo") {
     placar.innerHTML =
       '<p class="chip">Jogadas <b>' + jogadas + '</b></p>' +
-      '<p class="chip">Pares <b>' + paresEncontrados + '</b> de 8</p>' + combo;
+      '<p class="chip">Pares <b>' + paresEncontrados + '</b> de ' + tamanho.pares + '</p>' + combo;
     aviso.textContent = "";
     aviso.className = "vez";
   } else {
@@ -1117,17 +1661,21 @@ function atualizarPlacar() {
 }
 
 // ---------------------------------------------------------------
-// 10) VIRAR CARTAS E CONFERIR PARES
+// 12) VIRAR CARTAS E CONFERIR PARES
 // ---------------------------------------------------------------
 
 function cliqueDoJogador(carta) {
-  if (travado || vezDaCpu) return;
+  if (travado || vezDaCpu || partidaFinalizada) return;
   abrirCarta(carta);
 }
 
-// Serve para o jogador e para a máquina.
+/* Serve para o jogador e para a máquina. As travas abaixo impedem
+   que uma carta seja virada duas vezes ou que uma terceira carta
+   abra enquanto o par anterior ainda está sendo conferido. */
 function abrirCarta(carta) {
-  if (!carta) return;
+  if (!carta || partidaFinalizada) return;
+  if (cartasViradas.length >= 2) return;
+  if (cartasViradas.includes(carta)) return;
   if (carta.classList.contains("virada")) return;
   if (carta.classList.contains("encontrada")) return;
 
@@ -1136,7 +1684,7 @@ function abrirCarta(carta) {
   carta.classList.add("virada");
   sons.virar();
   cartasViradas.push(carta);
-  memorizar(carta);   // a máquina observa tudo que é virado
+  memorizar(carta);
 
   if (cartasViradas.length === 2) {
     jogadas++;
@@ -1144,7 +1692,6 @@ function abrirCarta(carta) {
   }
 }
 
-// Efeitos de quando um par é encontrado: explosão, texto e som de combo.
 function efeitosDePar(a, b) {
   const cores = coresDaSkin();
   [a, b].forEach(function (c) {
@@ -1169,7 +1716,6 @@ function verificarPar() {
   const segunda = cartasViradas[1];
   const acertou = primeira.dataset.simbolo === segunda.dataset.simbolo;
 
-  // Errou? As duas cartas tremem logo depois de terminar de virar.
   if (!acertou && !menosMovimento) {
     setTimeout(function () {
       if (id !== partida) return;
@@ -1178,15 +1724,16 @@ function verificarPar() {
     }, 480);
   }
 
-  // Espera a animação de virar terminar antes de decidir o que fazer.
   setTimeout(function () {
     if (id !== partida) return;
 
     if (acertou) {
       sons.acerto();
       serie++;
-      if (serie > melhorSerie) melhorSerie = serie;
-      if (serie >= 2 && !vezDaCpu) bonusCombo++;   // combo seu rende 1 moeda extra
+      if (!vezDaCpu) {
+        if (serie > melhorSerie) melhorSerie = serie;
+        if (serie >= 2) bonusCombo++;
+      }
 
       [primeira, segunda].forEach(function (c) {
         c.classList.add("encontrada");
@@ -1202,6 +1749,7 @@ function verificarPar() {
     } else {
       sons.erro();
       serie = 0;
+      if (!vezDaCpu) erros++;
       primeira.classList.remove("virada", "tremer");
       segunda.classList.remove("virada", "tremer");
     }
@@ -1209,14 +1757,13 @@ function verificarPar() {
     cartasViradas = [];
     travado = false;
 
-    if (paresEncontrados === simbolos.length) {
+    if (paresEncontrados === tamanho.pares) {
       atualizarPlacar();
       finalizarPartida();
       return;
     }
 
     if (modo === "cpu") {
-      // Quem acerta joga de novo. Quem erra passa a vez.
       if (!acertou) vezDaCpu = !vezDaCpu;
       atualizarPlacar();
       if (vezDaCpu) setTimeout(function () { turnoDaCpu(id); }, 600);
@@ -1227,55 +1774,81 @@ function verificarPar() {
 }
 
 // ---------------------------------------------------------------
-// 11) FIM DE PARTIDA: tempo, recorde, moedas e festa
+// 13) FIM DE PARTIDA: tempo, pontuação, recordes, moedas e desafios
 // ---------------------------------------------------------------
 
 function finalizarPartida() {
+  if (partidaFinalizada) return;   // garante que moedas e desafios são contados uma vez só
+  partidaFinalizada = true;
+  jogoEmAndamento = false;
+
   const id = partida;
   pararCronometro();
+  carregarSalvos();
   const tempo = Date.now() - inicioTempo;
+  const tempoSeg = Math.round(tempo / 1000);
   elTempo.textContent = formatarTempo(tempo);
 
-  let venceu, empate = false, titulo, ganho, linhas = [];
+  const paresSeus = modo === "solo" ? tamanho.pares : pontos.voce;
+  const venceu = modo === "solo" ? true : pontos.voce > pontos.cpu;
+  const empate = modo === "cpu" && pontos.voce === pontos.cpu;
+
+  // Pontuação: 100 por par seu, bônus por rapidez (quanto menos tempo, mais pontos) e -15 por erro.
+  const tempoAlvo = tamanho.pares * 10;
+  const pontuacao = Math.max(0, paresSeus * 100 + Math.max(0, tempoAlvo - tempoSeg) * 5 - erros * 15);
+
+  const linhas = [];
+  let titulo, ganho;
 
   if (modo === "solo") {
-    venceu = true;
     titulo = "🎉 Você venceu!";
-    // Moedas: 4 de base, mais um bônus por terminar rápido.
-    ganho = 4 + (tempo < 45000 ? 6 : (tempo < 75000 ? 3 : 0));
-    linhas.push("Tempo: " + formatarTempo(tempo));
-    linhas.push("Jogadas: " + jogadas);
+    const bonusTempo = tempoSeg < tempoAlvo * 0.55 ? 6 : (tempoSeg < tempoAlvo * 0.95 ? 3 : 0);
+    ganho = Math.round((4 + bonusTempo) * tamanho.fator);
+    linhas.push("Tempo: " + formatarTempo(tempo) + " · Jogadas: " + jogadas);
   } else {
-    venceu = pontos.voce > pontos.cpu;
-    empate = pontos.voce === pontos.cpu;
     titulo = venceu ? "🎉 Você venceu!" : (empate ? "🤝 Empate!" : "🤖 A máquina venceu");
-    // Moedas: 1 por par seu, mais o bônus do nível se você vencer.
-    ganho = pontos.voce + (venceu ? nivel.bonus : 0);
-    linhas.push("Placar: " + pontos.voce + " a " + pontos.cpu);
-    linhas.push("Tempo: " + formatarTempo(tempo));
+    ganho = pontos.voce + (venceu ? Math.round(nivel.bonus * tamanho.fator) : 0);
+    linhas.push("Placar: " + pontos.voce + " a " + pontos.cpu + " · Tempo: " + formatarTempo(tempo));
   }
 
-  // Combos rendem moedas extras em qualquer modo.
+  linhas.push("⭐ Pontuação: " + pontuacao);
+
   if (bonusCombo > 0) {
     ganho += bonusCombo;
     linhas.push("🔥 Maior combo: x" + melhorSerie + " (+" + bonusCombo + " moedas)");
   }
 
-  // Recorde de tempo: só vale se você venceu.
+  // Recordes só valem se você venceu.
   if (venceu) {
     const chave = chaveDoRecorde();
-    const anterior = melhoresTempos[chave];
-    if (!anterior || tempo < anterior) {
+    const tempoAnterior = melhoresTempos[chave];
+    if (!tempoAnterior || tempo < tempoAnterior) {
       melhoresTempos[chave] = tempo;
       salvar("memoria-melhores", melhoresTempos);
-      linhas.push("⭐ Novo recorde de tempo!");
+      linhas.push("🏆 Novo recorde de tempo!");
       atualizarMelhorTempo();
     }
+    const pontosAnterior = melhoresPontos[chave];
+    if (!pontosAnterior || pontuacao > pontosAnterior) {
+      melhoresPontos[chave] = pontuacao;
+      salvar("memoria-melhores-pontos", melhoresPontos);
+      linhas.push("🌟 Novo recorde de pontos!");
+    }
   }
+
+  // Desafios e objetivos: soma a partida e avisa o que ficou completo.
+  const completos = registrarDesafios({
+    venceu: venceu, pares: paresSeus, combo: melhorSerie, tempoSeg: tempoSeg,
+    totalPares: tamanho.pares, modo: modo, nivel: nivelId
+  });
+  completos.forEach(function (texto) {
+    linhas.push('<span class="missao">🎯 Desafio completo: ' + texto + '</span>');
+  });
 
   const moedasAntes = moedas;
   moedas += ganho;
   salvar("memoria-moedas", moedas);
+  partidasDesdeAnuncio++;
 
   if (venceu) sons.vitoria();
   else if (!empate) sons.derrota();
@@ -1289,7 +1862,6 @@ function finalizarPartida() {
   aviso.textContent = "";
   aviso.className = "vez";
 
-  // Quem venceu vê as cartas dançando em onda e uma chuva de confete.
   if (venceu && !menosMovimento) {
     cartas.forEach(function (c) {
       c.classList.add("festa");
@@ -1298,7 +1870,6 @@ function finalizarPartida() {
     confete(coresDaSkin().concat(["#7FB069", "#C46A5B"]));
   }
 
-  // Dá um tempinho pra ver o tabuleiro completo antes do painel aparecer.
   setTimeout(function () {
     if (id !== partida) return;
     resultado.classList.remove("oculta");
@@ -1308,10 +1879,9 @@ function finalizarPartida() {
 }
 
 // ---------------------------------------------------------------
-// 12) A MÁQUINA: memória e jogadas
+// 14) A MÁQUINA: memória e jogadas
 // ---------------------------------------------------------------
 
-// Tenta anotar a carta que acabou de aparecer.
 function memorizar(carta) {
   if (modo !== "cpu") return;
   if (Math.random() > nivel.chanceDeMemorizar) return;
@@ -1322,7 +1892,6 @@ function memorizar(carta) {
   memoria[posicao] = carta.dataset.simbolo;
   ordemDaMemoria.push(posicao);
 
-  // Passou do limite? Esquece a anotação mais antiga.
   if (ordemDaMemoria.length > nivel.limiteDeMemoria) {
     const maisAntiga = ordemDaMemoria.shift();
     delete memoria[maisAntiga];
@@ -1341,7 +1910,6 @@ function cartasDisponiveis() {
   });
 }
 
-// Sorteia uma carta fechada, preferindo as que ela ainda não conhece.
 function sortearCarta() {
   const livres = cartasDisponiveis();
   if (livres.length === 0) return null;
@@ -1350,7 +1918,6 @@ function sortearCarta() {
   return opcoes[Math.floor(Math.random() * opcoes.length)];
 }
 
-// Procura na memória duas posições com o mesmo símbolo.
 function procurarParNaMemoria() {
   const posicoes = Object.keys(memoria);
   for (let i = 0; i < posicoes.length; i++) {
@@ -1367,7 +1934,6 @@ function procurarParNaMemoria() {
   return null;
 }
 
-// Procura na memória a "irmã" de um símbolo específico.
 function procurarNaMemoria(simbolo, exceto) {
   const posicao = Object.keys(memoria).find(function (p) {
     return memoria[p] === simbolo && p !== exceto.dataset.posicao;
@@ -1375,41 +1941,48 @@ function procurarNaMemoria(simbolo, exceto) {
   return posicao ? cartas[posicao] : null;
 }
 
-// A jogada completa da máquina. O "id" garante que ela pare se você sair da partida.
+// Pausa com um pouco de variação, pra máquina não jogar como um relógio.
+function pausaDaCpu() {
+  return nivel.pausa + Math.round((Math.random() - 0.5) * 260);
+}
+
+/* A jogada da máquina. Mesmo quando ela LEMBRA de um par, existe uma
+   chance (chanceDeErro) de ela se distrair e virar outra carta. É isso
+   que torna o difícil forte, mas ainda humano e batível. */
 function turnoDaCpu(id) {
-  if (id !== partida) return;
+  if (id !== partida || partidaFinalizada) return;
 
   const parConhecido = procurarParNaMemoria();
-  if (parConhecido) {
-    // Ela lembra dos dois lugares. Vira direto.
+  const distraiu = Math.random() < nivel.chanceDeErro;
+
+  if (parConhecido && !distraiu) {
     abrirCarta(parConhecido[0]);
     setTimeout(function () {
       if (id !== partida) return;
       abrirCarta(parConhecido[1]);
-    }, nivel.pausa);
+    }, pausaDaCpu());
     return;
   }
 
-  // Não lembra de nenhum par: chuta a primeira.
   const primeira = sortearCarta();
+  if (!primeira) return;
   abrirCarta(primeira);
 
   setTimeout(function () {
     if (id !== partida) return;
-    // Agora que viu a primeira, tenta lembrar onde está a irmã dela.
     const irma = procurarNaMemoria(primeira.dataset.simbolo, primeira);
     const irmaValida = irma &&
       !irma.classList.contains("virada") &&
       !irma.classList.contains("encontrada");
-    abrirCarta(irmaValida ? irma : sortearCarta());
-  }, nivel.pausa);
+    const distraiuDeNovo = Math.random() < nivel.chanceDeErro;
+    abrirCarta(irmaValida && !distraiuDeNovo ? irma : sortearCarta());
+  }, pausaDaCpu());
 }
 
 // ---------------------------------------------------------------
-// 13) LIGAÇÕES DOS BOTÕES
+// 15) LIGAÇÕES DOS BOTÕES
 // ---------------------------------------------------------------
 
-// Libera o áudio no primeiro clique ou tecla.
 document.addEventListener("pointerdown", garantirAudio);
 document.addEventListener("keydown", garantirAudio);
 
@@ -1420,9 +1993,10 @@ botaoSom.addEventListener("click", function () {
   sons.virar();
 });
 
+// Solo vai direto para o tamanho. Contra a máquina escolhe o nível antes.
 document.getElementById("botao-solo").addEventListener("click", function () {
   modo = "solo";
-  iniciarJogo();
+  mostrarTela(telaTamanho);
 });
 
 document.getElementById("botao-cpu").addEventListener("click", function () {
@@ -1430,8 +2004,15 @@ document.getElementById("botao-cpu").addEventListener("click", function () {
   mostrarTela(telaNivel);
 });
 
+document.getElementById("botao-desafios").addEventListener("click", function () {
+  desenharDesafios();
+  mostrarTela(telaDesafios);
+});
+
 document.getElementById("botao-loja").addEventListener("click", function () {
-  desenharLoja("");
+  carregarSalvos();
+  skinEmFoco = skinAtualId;
+  desenharLoja("", true);
   mostrarTela(telaLoja);
 });
 
@@ -1439,20 +2020,39 @@ document.querySelectorAll("[data-nivel]").forEach(function (botao) {
   botao.addEventListener("click", function () {
     nivelId = botao.dataset.nivel;
     nivel = niveis[nivelId];
+    mostrarTela(telaTamanho);
+  });
+});
+
+document.querySelectorAll("[data-tamanho]").forEach(function (botao) {
+  botao.addEventListener("click", function () {
+    tamanhoId = botao.dataset.tamanho;
+    tamanho = tamanhos[tamanhoId];
     iniciarJogo();
   });
 });
 
 document.getElementById("voltar-menu").addEventListener("click", mostrarMenu);
 document.getElementById("voltar-menu-loja").addEventListener("click", mostrarMenu);
+document.getElementById("voltar-menu-desafios").addEventListener("click", mostrarMenu);
+document.getElementById("voltar-tamanho").addEventListener("click", function () {
+  if (modo === "cpu") mostrarTela(telaNivel); else mostrarMenu();
+});
 document.getElementById("sair-jogo").addEventListener("click", sairDoJogo);
-document.getElementById("botao-menu-fim").addEventListener("click", sairDoJogo);
-document.getElementById("botao-de-novo").addEventListener("click", iniciarJogo);
+
+// Os dois botões do painel de resultado são o ÚNICO ponto onde um anúncio poderia aparecer.
+document.getElementById("botao-de-novo").addEventListener("click", function () {
+  passarPeloAnuncio(iniciarJogo);
+});
+document.getElementById("botao-menu-fim").addEventListener("click", function () {
+  passarPeloAnuncio(sairDoJogo);
+});
 
 // ---------------------------------------------------------------
-// 14) PRIMEIRA TELA
+// 16) PRIMEIRA TELA
 // ---------------------------------------------------------------
 
+carregarSalvos();
 aplicarSkin();
 atualizarBotaoSom();
 criarFundoFlutuante();
